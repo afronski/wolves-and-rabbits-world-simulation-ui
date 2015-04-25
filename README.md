@@ -15,10 +15,11 @@ A textual description:
 ## TODO
 
 - *TODO*: Hooking up to the `simulation_event_stream`.
-- *TODO*: React.js + Flux = Simple application.
+- *TODO*: Adding tests to the implementation.
 - *TODO*: Fluxbox-based layout.
 - *TODO*: Buttons for starting / stopping simulation.
 - *TODO*: Feed with live changes on the right.
 - *TODO*: Canvas visualization! :)
 - *TODO*: Music during simulation! ;)
+- *TODO*: React.js + Flux (?).
 - *TODO*: Deploy it to the Heroku.
