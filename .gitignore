@@ -1,12 +1,12 @@
-# Mix artifacts
+# Mix artifacts:
 /_build
 /deps
 /*.ez
 
-# Generate on crash by the VM
+# Generate on crash by the VM:
 erl_crash.dump
 
-# Static artifacts
+# Static artifacts:
 /node_modules
 
 # Since we are building js and css from web/static,
@@ -14,3 +14,6 @@ erl_crash.dump
 # comment this depending on your deployment strategy.
 /priv/static/css
 /priv/static/js
+
+# Lock files:
+*.lock

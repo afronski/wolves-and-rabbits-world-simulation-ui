@@ -14,7 +14,8 @@ defmodule WolvesAndRabbitsWorldSimulationUi.Mixfile do
 
   def application do
     [mod: {WolvesAndRabbitsWorldSimulationUi, []},
-     applications: [:phoenix, :cowboy, :logger, :ecto]]
+     applications: [:phoenix, :cowboy, :logger, :ecto,
+                    :sasl, :wolves_and_rabbits_world_simulation]]
   end
 
   defp elixirc_paths(:test), do: ["lib", "web", "test/support"]
