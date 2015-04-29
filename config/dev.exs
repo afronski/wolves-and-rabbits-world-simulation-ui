@@ -1,11 +1,5 @@
 use Mix.Config
 
-# For development, we disable any cache and enable
-# debugging and code reloading.
-#
-# The watchers configuration can be used to run external
-# watchers to your application. For example, we use it
-# with brunch.io to recompile .js and .css sources.
 config :wolves_and_rabbits_world_simulation_ui, WolvesAndRabbitsWorldSimulationUi.Endpoint,
   http: [port: 4000],
   debug_errors: true,
@@ -13,7 +7,6 @@ config :wolves_and_rabbits_world_simulation_ui, WolvesAndRabbitsWorldSimulationU
   cache_static_lookup: false,
   watchers: [node: ["node_modules/brunch/bin/brunch", "watch"]]
 
-# Watch static and templates for browser reloading.
 config :wolves_and_rabbits_world_simulation_ui, WolvesAndRabbitsWorldSimulationUi.Endpoint,
   live_reload: [
     patterns: [
@@ -23,12 +16,4 @@ config :wolves_and_rabbits_world_simulation_ui, WolvesAndRabbitsWorldSimulationU
     ]
   ]
 
-# Do not include metadata nor timestamps in development logs
 config :logger, :console, format: "[$level] $message\n"
-
-# Configure your database
-config :wolves_and_rabbits_world_simulation_ui, WolvesAndRabbitsWorldSimulationUi.Repo,
-  adapter: Ecto.Adapters.Postgres,
-  username: "postgres",
-  password: "postgres",
-  database: "wolves_and_rabbits_world_simulation_ui_dev"

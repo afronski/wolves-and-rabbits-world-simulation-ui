@@ -16,22 +16,10 @@ defmodule WolvesAndRabbitsWorldSimulationUi.Web do
   below.
   """
 
-  def model do
-    quote do
-      use Ecto.Model
-    end
-  end
-
   def controller do
     quote do
       use Phoenix.Controller
 
-      # Alias the data repository and import query/model functions
-      alias WolvesAndRabbitsWorldSimulationUi.Repo
-      import Ecto.Model
-      import Ecto.Query, only: [from: 2]
-
-      # Import URL helpers from the router
       import WolvesAndRabbitsWorldSimulationUi.Router.Helpers
     end
   end
@@ -40,13 +28,9 @@ defmodule WolvesAndRabbitsWorldSimulationUi.Web do
     quote do
       use Phoenix.View, root: "web/templates"
 
-      # Import convenience functions from controllers
       import Phoenix.Controller, only: [get_flash: 2]
-
-      # Import URL helpers from the router
       import WolvesAndRabbitsWorldSimulationUi.Router.Helpers
 
-      # Use all HTML functionality (forms, tags, etc)
       use Phoenix.HTML
     end
   end
@@ -54,12 +38,6 @@ defmodule WolvesAndRabbitsWorldSimulationUi.Web do
   def channel do
     quote do
       use Phoenix.Channel
-
-      # Alias the data repository and import query/model functions
-      alias WolvesAndRabbitsWorldSimulationUi.Repo
-      import Ecto.Model
-      import Ecto.Query, only: [from: 2]
-
     end
   end
 

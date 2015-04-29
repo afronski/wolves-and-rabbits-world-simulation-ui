@@ -14,7 +14,7 @@ defmodule WolvesAndRabbitsWorldSimulationUi.Mixfile do
 
   def application do
     [mod: {WolvesAndRabbitsWorldSimulationUi, []},
-     applications: [:phoenix, :cowboy, :logger, :ecto,
+     applications: [:phoenix, :cowboy, :logger,
                     :sasl, :wolves_and_rabbits_world_simulation]]
   end
 
@@ -23,8 +23,6 @@ defmodule WolvesAndRabbitsWorldSimulationUi.Mixfile do
 
   defp deps do
     [{:phoenix, "~> 0.11"},
-     {:phoenix_ecto, "~> 0.3"},
-     {:postgrex, ">= 0.0.0"},
      {:phoenix_live_reload, "~> 0.3"},
      {:cowboy, "~> 1.0"},
      {:wolves_and_rabbits_world_simulation, github: "afronski/wolves-and-rabbits-world-simulation"}]

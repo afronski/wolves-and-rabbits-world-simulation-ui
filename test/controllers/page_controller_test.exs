@@ -3,6 +3,6 @@ defmodule WolvesAndRabbitsWorldSimulationUi.PageControllerTest do
 
   test "GET /" do
     conn = get conn(), "/"
-    assert conn.resp_body =~ "Welcome to Phoenix!"
+    assert conn.resp_body =~ "Wolves, Rabbits and Carrots"
   end
 end
