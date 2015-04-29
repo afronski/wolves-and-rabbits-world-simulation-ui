@@ -25,8 +25,6 @@ Music is created by [Eric Skiff](http://ericskiff.com/music/) and provided also 
 ## TODO
 
 - *TODO*: Hooking up to the `simulation_event_stream`.
-- *TODO*: Adding tests to the implementation.
-- *TODO*: Buttons for starting / stopping simulation.
 - *TODO*: Feed with live changes on the right.
 - *TODO*: Deploy it to the Heroku.
 - *TODO*: React.js + Flux (?).

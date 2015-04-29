@@ -1,6 +1,29 @@
+"use strict";
+
 const IS_BACKGROUND_AUDIO_MUTED_KEY = "BackgroundAudioMuted";
 
 let backgroundAudio = document.querySelector("#background-audio");
+
+let startSimulation = document.querySelector("#start-simulation");
+let stopSimulation = document.querySelector("#stop-simulation");
+
+let App = {
+    simulationState: false
+};
+
+startSimulation.addEventListener("click", function () {
+    startSimulation.setAttribute("disabled", true);
+    stopSimulation.removeAttribute("disabled");
+
+    App.simulationState = true;
+});
+
+stopSimulation.addEventListener("click", function () {
+    stopSimulation.setAttribute("disabled", true);
+    startSimulation.removeAttribute("disabled");
+
+    App.simulationState = false;
+});
 
 document.addEventListener("DOMContentLoaded", function () {
     backgroundAudio.muted = JSON.parse(window.localStorage.getItem(IS_BACKGROUND_AUDIO_MUTED_KEY)) || false;

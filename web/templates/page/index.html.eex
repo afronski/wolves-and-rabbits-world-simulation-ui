@@ -1,10 +1,13 @@
 <article>
   <aside id="menu">
     <h1>Wolves, Rabbits and Carrots</h1>
+
+    <button id="start-simulation">Start</button>
+    <button id="stop-simulation" disabled>Stop</button>
   </aside>
 
   <section id="board">
-    <canvas class="playground" width="700" height="700">
+    <canvas id="terrain" class="playground" width="700" height="700">
       Your browser does not support <code>canvas</code> element.
     </canvas>
   </section>
