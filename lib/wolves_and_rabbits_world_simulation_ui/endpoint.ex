@@ -3,7 +3,7 @@ defmodule WolvesAndRabbitsWorldSimulationUi.Endpoint do
 
   plug Plug.Static,
     at: "/", from: :wolves_and_rabbits_world_simulation_ui,
-    only: ~w(css images js favicon.ico robots.txt)
+    only: ~w(css images assets js favicon.ico robots.txt)
 
   if code_reloading? do
     plug Phoenix.LiveReloader

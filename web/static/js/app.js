@@ -1,10 +1,21 @@
-import {Socket} from "phoenix"
+const IS_BACKGROUND_AUDIO_MUTED_KEY = "BackgroundAudioMuted";
 
-// let socket = new Socket("/ws")
-// socket.join("topic:subtopic", {}, chan => {
-// })
+let backgroundAudio = document.querySelector("#background-audio");
 
-let App = {
-}
+document.addEventListener("DOMContentLoaded", function () {
+    backgroundAudio.muted = JSON.parse(window.localStorage.getItem(IS_BACKGROUND_AUDIO_MUTED_KEY)) || false;
 
-export default App
+    backgroundAudio.loop = true;
+    backgroundAudio.play();
+
+    window.addEventListener("keydown", function (event) {
+        var key = event.keyCode || event.which;
+
+        // Mute background audio via "m" or "M" key.
+
+        if (key === 77) {
+            backgroundAudio.muted = !backgroundAudio.muted;
+            window.localStorage.setItem(IS_BACKGROUND_AUDIO_MUTED_KEY, backgroundAudio.muted);
+        }
+    }, false);
+});

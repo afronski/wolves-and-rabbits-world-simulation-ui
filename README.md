@@ -12,13 +12,21 @@ A textual description:
 
 1. `mix phoenix.server`
 
+## Assets
+
+## Graphics
+
+*Favicon* is available [here](http://www.favicon.cc/?action=icon&file_id=719881).
+
+### Music
+
+Music is created by [Eric Skiff](http://ericskiff.com/music/) and provided also on [Creative Commons Attribution](http://creativecommons.org/licenses/by/3.0/) license.
+
 ## TODO
 
 - *TODO*: Hooking up to the `simulation_event_stream`.
 - *TODO*: Adding tests to the implementation.
 - *TODO*: Buttons for starting / stopping simulation.
 - *TODO*: Feed with live changes on the right.
-- *TODO*: Canvas visualization! :)
-- *TODO*: Music during simulation! ;)
-- *TODO*: React.js + Flux (?).
 - *TODO*: Deploy it to the Heroku.
+- *TODO*: React.js + Flux (?).

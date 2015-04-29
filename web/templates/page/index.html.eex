@@ -5,7 +5,7 @@
 
   <section id="board">
     <canvas class="playground" width="700" height="700">
-      Your browser does not support Canvas API :(
+      Your browser does not support <code>canvas</code> element.
     </canvas>
   </section>
 
@@ -18,8 +18,13 @@
   <p>
     <small>afronski (Wojtek Gawroński) - 2015</small>
   </p>
+  <p>
+    <small>Press <code>m</code> / <code>M</code> to toggle background audio.</small>
+  </p>
 
-  <audio class="hidden">
-
+  <audio id="background-audio" class="hidden">
+    Your browser does not support the <code>audio</code> element.
+    <source src="<%= static_path(@conn, "/assets/music/Music.ogg") %>" type="audio/ogg" />
+    <source src="<%= static_path(@conn, "/assets/music/Music.mp3") %>" type="audio/mpeg" />
   </audio>
 </footer>
