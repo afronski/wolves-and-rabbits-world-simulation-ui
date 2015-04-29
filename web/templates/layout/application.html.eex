@@ -11,13 +11,12 @@
 
     <title>Wolves, Rabbits and Carrots :: Simulation</title>
 
+    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Indie+Flower" type="text/css" />
     <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>" />
   </head>
 
   <body>
-    <article class="main">
-      <%= @inner %>
-    </article>
+    <%= @inner %>
 
     <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
     <script>require("web/static/js/app")</script>

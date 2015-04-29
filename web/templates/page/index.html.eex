@@ -1,1 +1,25 @@
-<h1>Wolves, Rabbits and Carrots</h1>
+<article>
+  <aside id="menu">
+    <h1>Wolves, Rabbits and Carrots</h1>
+  </aside>
+
+  <section id="board">
+    <canvas class="playground" width="700" height="700">
+      Your browser does not support Canvas API :(
+    </canvas>
+  </section>
+
+  <aside id="events">
+    <h1>Events</h1>
+  </aside>
+</article>
+
+<footer id="footer">
+  <p>
+    <small>afronski (Wojtek Gawroński) - 2015</small>
+  </p>
+
+  <audio class="hidden">
+
+  </audio>
+</footer>

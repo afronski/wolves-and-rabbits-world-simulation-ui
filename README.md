@@ -16,7 +16,6 @@ A textual description:
 
 - *TODO*: Hooking up to the `simulation_event_stream`.
 - *TODO*: Adding tests to the implementation.
-- *TODO*: Fluxbox-based layout.
 - *TODO*: Buttons for starting / stopping simulation.
 - *TODO*: Feed with live changes on the right.
 - *TODO*: Canvas visualization! :)
