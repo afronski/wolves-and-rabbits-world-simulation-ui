@@ -1,5 +1,7 @@
 "use strict";
 
+import { Socket } from "phoenix";
+
 const IS_BACKGROUND_AUDIO_MUTED_KEY = "BackgroundAudioMuted";
 
 let backgroundAudio = document.querySelector("#background-audio");
@@ -11,11 +13,29 @@ let App = {
     simulationState: false
 };
 
-startSimulation.addEventListener("click", function () {
-    startSimulation.setAttribute("disabled", true);
-    stopSimulation.removeAttribute("disabled");
+let socket = new Socket("/communications");
 
-    App.simulationState = true;
+socket.connect();
+socket.join("controller", {}).receive("ok", channel => {
+    console.info("Communication channel: attached, Channel:", channel);
+
+    startSimulation.addEventListener("click", function () {
+        startSimulation.setAttribute("disabled", true);
+        stopSimulation.removeAttribute("disabled");
+
+        App.simulationState = true;
+
+        channel.push("start_simulation");
+    });
+
+    stopSimulation.addEventListener("click", function () {
+        stopSimulation.setAttribute("disabled", true);
+        startSimulation.removeAttribute("disabled");
+
+        App.simulationState = false;
+
+        channel.push("stop_simulation");
+    });
 });
 
 stopSimulation.addEventListener("click", function () {

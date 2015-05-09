@@ -856,6 +856,8 @@ if(typeof(window) === 'object' && !window.Phoenix){ window.Phoenix = require('ph
 require.register("web/static/js/app", function(exports, require, module) {
 "use strict";
 
+var Socket = require("phoenix").Socket;
+
 var IS_BACKGROUND_AUDIO_MUTED_KEY = "BackgroundAudioMuted";
 
 var backgroundAudio = document.querySelector("#background-audio");
@@ -867,11 +869,29 @@ var App = {
     simulationState: false
 };
 
-startSimulation.addEventListener("click", function () {
-    startSimulation.setAttribute("disabled", true);
-    stopSimulation.removeAttribute("disabled");
+var socket = new Socket("/communications");
 
-    App.simulationState = true;
+socket.connect();
+socket.join("controller", {}).receive("ok", function (channel) {
+    console.info("Communication channel: attached, Channel:", channel);
+
+    startSimulation.addEventListener("click", function () {
+        startSimulation.setAttribute("disabled", true);
+        stopSimulation.removeAttribute("disabled");
+
+        App.simulationState = true;
+
+        channel.push("start_simulation");
+    });
+
+    stopSimulation.addEventListener("click", function () {
+        stopSimulation.setAttribute("disabled", true);
+        startSimulation.removeAttribute("disabled");
+
+        App.simulationState = false;
+
+        channel.push("stop_simulation");
+    });
 });
 
 stopSimulation.addEventListener("click", function () {
