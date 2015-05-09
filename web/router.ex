@@ -8,10 +8,6 @@ defmodule WolvesAndRabbitsWorldSimulationUi.Router do
     plug :protect_from_forgery
   end
 
-  pipeline :api do
-    plug :accepts, ["json"]
-  end
-
   scope "/", WolvesAndRabbitsWorldSimulationUi do
     pipe_through :browser
 
