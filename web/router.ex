@@ -16,5 +16,6 @@ defmodule WolvesAndRabbitsWorldSimulationUi.Router do
 
    socket "/communications", WolvesAndRabbitsWorldSimulationUi.Communications do
      channel "controller", ControllerChannel
+     channel "events", IncomingEventsChannel
    end
 end

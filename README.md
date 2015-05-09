@@ -32,7 +32,6 @@ Music is created by [Eric Skiff](http://ericskiff.com/music/) and provided also 
 
 ## TODO
 
-- *TODO*: Hooking up to the `simulation_event_stream`.
-- *TODO*: Feed with live changes on the right.
 - *TODO*: Canvas - Sprites and Animation.
 - *TODO*: React.js + Flux.
+- *TODO*: Tests - Channels and Controllers.

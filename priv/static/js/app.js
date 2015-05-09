@@ -865,13 +865,15 @@ var backgroundAudio = document.querySelector("#background-audio");
 var startSimulation = document.querySelector("#start-simulation");
 var stopSimulation = document.querySelector("#stop-simulation");
 
+var eventsList = document.querySelector("#events-list");
+
 var App = {
     simulationState: false
 };
 
 var socket = new Socket("/communications");
-
 socket.connect();
+
 socket.join("controller", {}).receive("ok", function (channel) {
     console.info("Communication channel: attached, Channel:", channel);
 
@@ -894,11 +896,17 @@ socket.join("controller", {}).receive("ok", function (channel) {
     });
 });
 
-stopSimulation.addEventListener("click", function () {
-    stopSimulation.setAttribute("disabled", true);
-    startSimulation.removeAttribute("disabled");
+socket.join("events", {}).receive("ok", function (channel) {
+    console.info("Events channel: attached, Channel:", channel);
 
-    App.simulationState = false;
+    channel.on("incoming", function (payload) {
+        var item = document.createElement("li");
+
+        item.appendChild(document.createTextNode("" + payload.who + " - " + payload.action));
+        eventsList.appendChild(item);
+
+        eventsList.scrollTop = eventsList.scrollHeight;
+    });
 });
 
 document.addEventListener("DOMContentLoaded", function () {

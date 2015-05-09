@@ -135,3 +135,10 @@ button[disabled] {
 .hidden {
   display: none;
 }
+
+.events {
+  list-style: none;
+  max-height: 650px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}

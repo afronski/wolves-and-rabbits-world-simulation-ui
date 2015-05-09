@@ -9,13 +9,15 @@ let backgroundAudio = document.querySelector("#background-audio");
 let startSimulation = document.querySelector("#start-simulation");
 let stopSimulation = document.querySelector("#stop-simulation");
 
+let eventsList = document.querySelector("#events-list");
+
 let App = {
     simulationState: false
 };
 
 let socket = new Socket("/communications");
-
 socket.connect();
+
 socket.join("controller", {}).receive("ok", channel => {
     console.info("Communication channel: attached, Channel:", channel);
 
@@ -38,11 +40,17 @@ socket.join("controller", {}).receive("ok", channel => {
     });
 });
 
-stopSimulation.addEventListener("click", function () {
-    stopSimulation.setAttribute("disabled", true);
-    startSimulation.removeAttribute("disabled");
+socket.join("events", {}).receive("ok", channel => {
+    console.info("Events channel: attached, Channel:", channel);
 
-    App.simulationState = false;
+    channel.on("incoming", payload => {
+        var item = document.createElement("li");
+
+        item.appendChild(document.createTextNode(`${payload.who} - ${payload.action}`));
+        eventsList.appendChild(item);
+
+        eventsList.scrollTop = eventsList.scrollHeight;
+    });
 });
 
 document.addEventListener("DOMContentLoaded", function () {

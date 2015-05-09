@@ -118,5 +118,12 @@ button[disabled] {
 .hidden {
   display: none; }
 
+/* line 139, stdin */
+.events {
+  list-style: none;
+  max-height: 650px;
+  overflow-x: hidden;
+  overflow-y: auto; }
+
 
 /*# sourceMappingURL=app.css.map*/
