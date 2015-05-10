@@ -4,6 +4,17 @@ defmodule WolvesAndRabbitsWorldSimulationUi.PageController do
   plug :action
 
   def index(conn, _params) do
-    render conn, "index.html"
+    { {:width, width},
+      {:height, height},
+      {:simulation_started, is_started} } = :simulation_controller.get_simulation_parameters()
+
+    parameters = %{
+      width: width,
+      height: height,
+      simulation_started: is_started,
+      margin: 50
+    }
+
+    render conn, "index.html", %{world: parameters}
   end
 end

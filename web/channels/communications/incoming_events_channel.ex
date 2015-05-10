@@ -8,11 +8,11 @@ defmodule WolvesAndRabbitsWorldSimulationUi.Communications.IncomingEventsChannel
 
   def handle_out("incoming", message, socket) do
     Logger.info "Incoming event: #{inspect message.body}"
-    push socket, "incoming", build_message(message.body)
+    push socket, "incoming", build_client_message(message.body)
 
     {:noreply, socket}
   end
 
-  defp build_message({who, action, _}), do: %{who: who, action: action}
-  defp build_message({who, pid, action, _}) when is_pid(pid), do: %{who: who, action: action}
+  defp build_client_message({who, action, _}), do: %{who: who, action: action}
+  defp build_client_message({who, pid, action, _}) when is_pid(pid), do: %{who: who, action: action}
 end

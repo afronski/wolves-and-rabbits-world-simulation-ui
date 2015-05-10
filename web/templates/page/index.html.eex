@@ -7,7 +7,12 @@
   </aside>
 
   <section id="board">
-    <canvas id="terrain" class="playground" width="700" height="700">
+    <canvas id="terrain" class="playground"
+            width="<%= @world.width * 10 + @world.margin %>"
+            height="<%= @world.height * 10 + @world.margin %>"
+            data-world-width="<%= @world.width %>"
+            data-world-height="<%= @world.height %>"
+            data-world-simulation-started="<%= @world.simulation_started %>">
       Your browser does not support <code>canvas</code> element.
     </canvas>
   </section>
