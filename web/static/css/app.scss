@@ -43,12 +43,6 @@ article {
 
 #events {
   text-align: center;
-
-  -webkit-box-flex: 3;
-  -moz-box-flex: 3;
-  box-flex: 3;
-
-  padding-left: 20px;
   border-left: 1px solid #EAEAEA;
 }
 
@@ -112,26 +106,6 @@ button[disabled] {
   opacity: 0.5;
 }
 
-.events-list {
-  margin: 0;
-  padding: 0;
-  list-style-type: none;
-
-  margin-top: 20px;
-  max-height: 432px;
-
-  overflow: hidden;
-  overflow-y: auto;
-}
-
-.historical-item {
-  padding: 5px 10px;
-}
-
-.active-historical-item {
-  font-weight: bold;
-}
-
 .hidden {
   display: none;
 }
@@ -142,7 +116,15 @@ button[disabled] {
 
 .events {
   list-style: none;
+  text-align: left;
+
+  margin: 0;
+  padding: 0;
+  padding-left: 40px;
+
+  width: 350px;
   max-height: 720px;
+  
   overflow-x: hidden;
   overflow-y: auto;
 }

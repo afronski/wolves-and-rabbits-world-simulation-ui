@@ -909,6 +909,22 @@ var App = (function () {
                 });
             }
         },
+        stop: {
+            value: function stop() {
+                this.stopSimulation.setAttribute("disabled", true);
+                this.startSimulation.removeAttribute("disabled");
+
+                this.simulationState = false;
+            }
+        },
+        start: {
+            value: function start() {
+                this.startSimulation.setAttribute("disabled", true);
+                this.stopSimulation.removeAttribute("disabled");
+
+                this.simulationState = true;
+            }
+        },
         connect: {
             value: function connect() {
                 var _this = this;
@@ -921,21 +937,21 @@ var App = (function () {
                     console.info("Communication channel: attached, Channel:", channel);
 
                     _this.startSimulation.addEventListener("click", function () {
-                        _this.startSimulation.setAttribute("disabled", true);
-                        _this.stopSimulation.removeAttribute("disabled");
-
-                        _this.simulationState = true;
-
+                        _this.start();
                         channel.push("start_simulation");
                     });
 
                     _this.stopSimulation.addEventListener("click", function () {
-                        _this.stopSimulation.setAttribute("disabled", true);
-                        _this.startSimulation.removeAttribute("disabled");
-
-                        _this.simulationState = false;
-
+                        _this.stop();
                         channel.push("stop_simulation");
+                    });
+
+                    channel.on("stop_simulation", function () {
+                        _this.stop();
+                    });
+
+                    channel.on("start_simulation", function () {
+                        _this.start();
                     });
                 });
 
@@ -1072,17 +1088,23 @@ var EventsList = exports.EventsList = (function () {
         _classCallCheck(this, EventsList);
 
         this.list = list;
+
+        this.references = [];
+        this.maxLength = 30;
     }
 
     _createClass(EventsList, {
         updateList: {
             value: function updateList(payload) {
                 var item = document.createElement("li");
+                item.appendChild(document.createTextNode("" + payload.who + ", " + payload.action));
 
-                item.appendChild(document.createTextNode("" + payload.who + " - " + payload.action));
                 this.list.appendChild(item);
+                this.references.push(item);
 
-                this.list.scrollTop = this.list.scrollHeight;
+                if (this.references.length > this.maxLength) {
+                    this.list.removeChild(this.references.shift());
+                }
             }
         }
     });

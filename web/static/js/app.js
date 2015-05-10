@@ -39,6 +39,20 @@ class App {
         this.board = new Board(width, height, margin, this.canvas, () => { this.connect() });
     }
 
+    stop() {
+        this.stopSimulation.setAttribute("disabled", true);
+        this.startSimulation.removeAttribute("disabled");
+
+        this.simulationState = false;
+    }
+
+    start() {
+        this.startSimulation.setAttribute("disabled", true);
+        this.stopSimulation.removeAttribute("disabled");
+
+        this.simulationState = true;
+    }
+
     connect() {
         let socket = new Socket("/communications");
 
@@ -48,21 +62,21 @@ class App {
             console.info("Communication channel: attached, Channel:", channel);
 
             this.startSimulation.addEventListener("click", () => {
-                this.startSimulation.setAttribute("disabled", true);
-                this.stopSimulation.removeAttribute("disabled");
-
-                this.simulationState = true;
-
+                this.start();
                 channel.push("start_simulation");
             });
 
             this.stopSimulation.addEventListener("click", () => {
-                this.stopSimulation.setAttribute("disabled", true);
-                this.startSimulation.removeAttribute("disabled");
-
-                this.simulationState = false;
-
+                this.stop();
                 channel.push("stop_simulation");
+            });
+
+            channel.on("stop_simulation", () => {
+                this.stop();
+            });
+
+            channel.on("start_simulation", () => {
+                this.start();
             });
         });
 
