@@ -880,7 +880,7 @@ var App = (function () {
         this.stopSimulation = document.querySelector("#stop-simulation");
 
         this.audioMuted = JSON.parse(window.localStorage.getItem(IS_BACKGROUND_AUDIO_MUTED_KEY)) || false;
-        this.simulationState = this.canvas.getAttribute("data-world-simulation-started");
+        this.simulationState = this.canvas.getAttribute("data-world-simulation-started") === "true";
 
         this.events = null;
         this.board = null;
@@ -1008,7 +1008,7 @@ var Board = exports.Board = (function () {
         this.worldWidth = width / TILE_SIZE;
         this.worldHeight = height / TILE_SIZE;
 
-        this.margin = margin / TILE_SIZE;
+        this.margin = margin / TILE_SIZE / 2;
 
         this.canvas = canvas;
         this.context = canvas.getContext("2d");
@@ -1037,20 +1037,18 @@ var Board = exports.Board = (function () {
         },
         drawTerrain: {
             value: function drawTerrain() {
-                var startingX = this.margin / 2;
-                var startingY = this.margin / 2;
+                var startingX = this.margin;
+                var startingY = this.margin;
 
-                for (var x = startingX; x < this.worldWidth - this.margin / 2; ++x) {
-                    for (var y = startingY; y < this.worldHeight - this.margin / 2; ++y) {
+                for (var x = startingX; x < this.worldWidth - this.margin; ++x) {
+                    for (var y = startingY; y < this.worldHeight - this.margin; ++y) {
                         this.context.drawImage(this.tiles.grass, x * TILE_SIZE, y * TILE_SIZE);
                     }
                 }
             }
         },
         updateBoard: {
-            value: function updateBoard(payload) {
-                console.log("[BOARD]", payload);
-            }
+            value: function updateBoard(payload) {}
         }
     });
 

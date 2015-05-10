@@ -16,7 +16,7 @@ class App {
         this.stopSimulation = document.querySelector("#stop-simulation");
 
         this.audioMuted = JSON.parse(window.localStorage.getItem(IS_BACKGROUND_AUDIO_MUTED_KEY)) || false;
-        this.simulationState = this.canvas.getAttribute("data-world-simulation-started");
+        this.simulationState = this.canvas.getAttribute("data-world-simulation-started") === "true";
 
         this.events = null;
         this.board = null;
