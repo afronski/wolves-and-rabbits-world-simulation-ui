@@ -136,9 +136,13 @@ button[disabled] {
   display: none;
 }
 
+.board {
+  height: 800px;
+}
+
 .events {
   list-style: none;
-  max-height: 650px;
+  max-height: 720px;
   overflow-x: hidden;
   overflow-y: auto;
 }

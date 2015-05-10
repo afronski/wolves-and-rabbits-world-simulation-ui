@@ -12,7 +12,7 @@ defmodule WolvesAndRabbitsWorldSimulationUi.PageController do
       width: width,
       height: height,
       simulation_started: is_started,
-      margin: 50
+      margin: 40
     }
 
     render conn, "index.html", %{world: parameters}

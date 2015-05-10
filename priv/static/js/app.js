@@ -856,76 +856,241 @@ if(typeof(window) === 'object' && !window.Phoenix){ window.Phoenix = require('ph
 require.register("web/static/js/app", function(exports, require, module) {
 "use strict";
 
+var _createClass = (function () { function defineProperties(target, props) { for (var key in props) { var prop = props[key]; prop.configurable = true; if (prop.value) prop.writable = true; } Object.defineProperties(target, props); } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
+
 var Socket = require("phoenix").Socket;
+
+var EventsList = require("./events-list").EventsList;
+
+var Board = require("./board").Board;
 
 var IS_BACKGROUND_AUDIO_MUTED_KEY = "BackgroundAudioMuted";
 
-var backgroundAudio = document.querySelector("#background-audio");
+var App = (function () {
+    function App() {
+        _classCallCheck(this, App);
 
-var startSimulation = document.querySelector("#start-simulation");
-var stopSimulation = document.querySelector("#stop-simulation");
+        this.canvas = document.querySelector("#terrain");
 
-var eventsList = document.querySelector("#events-list");
+        this.backgroundAudio = document.querySelector("#background-audio");
 
-var App = {
-    simulationState: false
-};
+        this.startSimulation = document.querySelector("#start-simulation");
+        this.stopSimulation = document.querySelector("#stop-simulation");
 
-var socket = new Socket("/communications");
-socket.connect();
+        this.audioMuted = JSON.parse(window.localStorage.getItem(IS_BACKGROUND_AUDIO_MUTED_KEY)) || false;
+        this.simulationState = this.canvas.getAttribute("data-world-simulation-started");
 
-socket.join("controller", {}).receive("ok", function (channel) {
-    console.info("Communication channel: attached, Channel:", channel);
+        this.events = null;
+        this.board = null;
 
-    startSimulation.addEventListener("click", function () {
-        startSimulation.setAttribute("disabled", true);
-        stopSimulation.removeAttribute("disabled");
+        if (this.simulationState) {
+            this.startSimulation.setAttribute("disabled", true);
+            this.stopSimulation.removeAttribute("disabled");
+        }
+    }
 
-        App.simulationState = true;
+    _createClass(App, {
+        initialize: {
+            value: function initialize() {
+                var _this = this;
 
-        channel.push("start_simulation");
+                var width = parseInt(this.canvas.getAttribute("width"), 10);
+                var height = parseInt(this.canvas.getAttribute("height"), 10);
+
+                var margin = parseInt(this.canvas.getAttribute("data-world-margin"), 10);
+
+                var eventsList = document.querySelector("#events-list");
+
+                this.events = new EventsList(eventsList);
+                this.board = new Board(width, height, margin, this.canvas, function () {
+                    _this.connect();
+                });
+            }
+        },
+        connect: {
+            value: function connect() {
+                var _this = this;
+
+                var socket = new Socket("/communications");
+
+                socket.connect();
+
+                socket.join("controller", {}).receive("ok", function (channel) {
+                    console.info("Communication channel: attached, Channel:", channel);
+
+                    _this.startSimulation.addEventListener("click", function () {
+                        _this.startSimulation.setAttribute("disabled", true);
+                        _this.stopSimulation.removeAttribute("disabled");
+
+                        _this.simulationState = true;
+
+                        channel.push("start_simulation");
+                    });
+
+                    _this.stopSimulation.addEventListener("click", function () {
+                        _this.stopSimulation.setAttribute("disabled", true);
+                        _this.startSimulation.removeAttribute("disabled");
+
+                        _this.simulationState = false;
+
+                        channel.push("stop_simulation");
+                    });
+                });
+
+                socket.join("events", {}).receive("ok", function (channel) {
+                    console.info("Events channel: attached, Channel:", channel);
+
+                    channel.on("incoming", function (payload) {
+                        _this.events.updateList(payload);
+                        _this.board.updateBoard(payload);
+                    });
+                });
+            }
+        },
+        playMusic: {
+            value: function playMusic() {
+                var _this = this;
+
+                this.backgroundAudio.muted = this.audioMuted;
+
+                this.backgroundAudio.loop = true;
+                this.backgroundAudio.play();
+
+                window.addEventListener("keydown", function (event) {
+                    var key = event.keyCode || event.which;
+
+                    // Mute background audio via "m" or "M" key.
+
+                    if (key === 77) {
+                        _this.audioMuted = !_this.audioMuted;
+                        _this.backgroundAudio.muted = _this.audioMuted;
+
+                        window.localStorage.setItem(IS_BACKGROUND_AUDIO_MUTED_KEY, _this.audioMuted);
+                    }
+                }, false);
+            }
+        }
     });
 
-    stopSimulation.addEventListener("click", function () {
-        stopSimulation.setAttribute("disabled", true);
-        startSimulation.removeAttribute("disabled");
-
-        App.simulationState = false;
-
-        channel.push("stop_simulation");
-    });
-});
-
-socket.join("events", {}).receive("ok", function (channel) {
-    console.info("Events channel: attached, Channel:", channel);
-
-    channel.on("incoming", function (payload) {
-        var item = document.createElement("li");
-
-        item.appendChild(document.createTextNode("" + payload.who + " - " + payload.action));
-        eventsList.appendChild(item);
-
-        eventsList.scrollTop = eventsList.scrollHeight;
-    });
-});
+    return App;
+})();
 
 document.addEventListener("DOMContentLoaded", function () {
-    backgroundAudio.muted = JSON.parse(window.localStorage.getItem(IS_BACKGROUND_AUDIO_MUTED_KEY)) || false;
+    var app = new App();
 
-    backgroundAudio.loop = true;
-    backgroundAudio.play();
-
-    window.addEventListener("keydown", function (event) {
-        var key = event.keyCode || event.which;
-
-        // Mute background audio via "m" or "M" key.
-
-        if (key === 77) {
-            backgroundAudio.muted = !backgroundAudio.muted;
-            window.localStorage.setItem(IS_BACKGROUND_AUDIO_MUTED_KEY, backgroundAudio.muted);
-        }
-    }, false);
+    app.playMusic();
+    app.initialize();
 });});
 
+require.register("web/static/js/board", function(exports, require, module) {
+"use strict";
 
+var _createClass = (function () { function defineProperties(target, props) { for (var key in props) { var prop = props[key]; prop.configurable = true; if (prop.value) prop.writable = true; } Object.defineProperties(target, props); } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+"use strict";
+
+var TILE_SIZE = 10;
+
+var Board = exports.Board = (function () {
+    function Board(width, height, margin, canvas, loaded) {
+        _classCallCheck(this, Board);
+
+        this.width = width;
+        this.height = height;
+
+        this.worldWidth = width / TILE_SIZE;
+        this.worldHeight = height / TILE_SIZE;
+
+        this.margin = margin / TILE_SIZE;
+
+        this.canvas = canvas;
+        this.context = canvas.getContext("2d");
+
+        this.tiles = {
+            grass: this.loadTile("grass")
+        };
+
+        this.clearBackground();
+        this.drawTerrain();
+
+        loaded();
+    }
+
+    _createClass(Board, {
+        loadTile: {
+            value: function loadTile(name) {
+                return document.querySelector("#" + name);
+            }
+        },
+        clearBackground: {
+            value: function clearBackground() {
+                this.context.fillStyle = "#256D7B";
+                this.context.fillRect(0, 0, this.width, this.height);
+            }
+        },
+        drawTerrain: {
+            value: function drawTerrain() {
+                var startingX = this.margin / 2;
+                var startingY = this.margin / 2;
+
+                for (var x = startingX; x < this.worldWidth - this.margin / 2; ++x) {
+                    for (var y = startingY; y < this.worldHeight - this.margin / 2; ++y) {
+                        this.context.drawImage(this.tiles.grass, x * TILE_SIZE, y * TILE_SIZE);
+                    }
+                }
+            }
+        },
+        updateBoard: {
+            value: function updateBoard(payload) {
+                console.log("[BOARD]", payload);
+            }
+        }
+    });
+
+    return Board;
+})();});
+
+;require.register("web/static/js/events-list", function(exports, require, module) {
+"use strict";
+
+var _createClass = (function () { function defineProperties(target, props) { for (var key in props) { var prop = props[key]; prop.configurable = true; if (prop.value) prop.writable = true; } Object.defineProperties(target, props); } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+"use strict";
+
+var EventsList = exports.EventsList = (function () {
+    function EventsList(list) {
+        _classCallCheck(this, EventsList);
+
+        this.list = list;
+    }
+
+    _createClass(EventsList, {
+        updateList: {
+            value: function updateList(payload) {
+                var item = document.createElement("li");
+
+                item.appendChild(document.createTextNode("" + payload.who + " - " + payload.action));
+                this.list.appendChild(item);
+
+                this.list.scrollTop = this.list.scrollHeight;
+            }
+        }
+    });
+
+    return EventsList;
+})();});
+
+;
 //# sourceMappingURL=app.js.map

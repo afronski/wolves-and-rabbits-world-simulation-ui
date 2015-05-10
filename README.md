@@ -32,6 +32,5 @@ Music is created by [Eric Skiff](http://ericskiff.com/music/) and provided also 
 
 ## TODO
 
-- *TODO*: Canvas - Sprites and Animation.
-- *TODO*: React.js + Flux.
+- *TODO*: Canvas - Entities visualization.
 - *TODO*: Tests - Channels and Controllers.

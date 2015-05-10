@@ -119,9 +119,13 @@ button[disabled] {
   display: none; }
 
 /* line 139, stdin */
+.board {
+  height: 800px; }
+
+/* line 143, stdin */
 .events {
   list-style: none;
-  max-height: 650px;
+  max-height: 720px;
   overflow-x: hidden;
   overflow-y: auto; }
 

@@ -6,10 +6,11 @@
     <button id="stop-simulation" disabled>Stop</button>
   </aside>
 
-  <section id="board">
+  <section id="board" class="board">
     <canvas id="terrain" class="playground"
             width="<%= @world.width * 10 + @world.margin %>"
             height="<%= @world.height * 10 + @world.margin %>"
+            data-world-margin="<%= @world.margin %>"
             data-world-width="<%= @world.width %>"
             data-world-height="<%= @world.height %>"
             data-world-simulation-started="<%= @world.simulation_started %>">
@@ -22,6 +23,10 @@
     <ul id="events-list" class="events"></ul>
   </aside>
 </article>
+
+<section class="hidden">
+  <img id="grass" src="/assets/grass.png" />
+</section>
 
 <footer id="footer">
   <p>

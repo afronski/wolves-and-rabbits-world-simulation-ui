@@ -1,72 +1,105 @@
 "use strict";
 
 import { Socket } from "phoenix";
+import { EventsList } from "./events-list";
+import { Board } from "./board";
 
 const IS_BACKGROUND_AUDIO_MUTED_KEY = "BackgroundAudioMuted";
 
-let backgroundAudio = document.querySelector("#background-audio");
+class App {
+    constructor() {
+        this.canvas = document.querySelector("#terrain");
 
-let startSimulation = document.querySelector("#start-simulation");
-let stopSimulation = document.querySelector("#stop-simulation");
+        this.backgroundAudio = document.querySelector("#background-audio");
 
-let eventsList = document.querySelector("#events-list");
+        this.startSimulation = document.querySelector("#start-simulation");
+        this.stopSimulation = document.querySelector("#stop-simulation");
 
-let App = {
-    simulationState: false
-};
+        this.audioMuted = JSON.parse(window.localStorage.getItem(IS_BACKGROUND_AUDIO_MUTED_KEY)) || false;
+        this.simulationState = this.canvas.getAttribute("data-world-simulation-started");
 
-let socket = new Socket("/communications");
-socket.connect();
+        this.events = null;
+        this.board = null;
 
-socket.join("controller", {}).receive("ok", channel => {
-    console.info("Communication channel: attached, Channel:", channel);
-
-    startSimulation.addEventListener("click", function () {
-        startSimulation.setAttribute("disabled", true);
-        stopSimulation.removeAttribute("disabled");
-
-        App.simulationState = true;
-
-        channel.push("start_simulation");
-    });
-
-    stopSimulation.addEventListener("click", function () {
-        stopSimulation.setAttribute("disabled", true);
-        startSimulation.removeAttribute("disabled");
-
-        App.simulationState = false;
-
-        channel.push("stop_simulation");
-    });
-});
-
-socket.join("events", {}).receive("ok", channel => {
-    console.info("Events channel: attached, Channel:", channel);
-
-    channel.on("incoming", payload => {
-        var item = document.createElement("li");
-
-        item.appendChild(document.createTextNode(`${payload.who} - ${payload.action}`));
-        eventsList.appendChild(item);
-
-        eventsList.scrollTop = eventsList.scrollHeight;
-    });
-});
-
-document.addEventListener("DOMContentLoaded", function () {
-    backgroundAudio.muted = JSON.parse(window.localStorage.getItem(IS_BACKGROUND_AUDIO_MUTED_KEY)) || false;
-
-    backgroundAudio.loop = true;
-    backgroundAudio.play();
-
-    window.addEventListener("keydown", function (event) {
-        var key = event.keyCode || event.which;
-
-        // Mute background audio via "m" or "M" key.
-
-        if (key === 77) {
-            backgroundAudio.muted = !backgroundAudio.muted;
-            window.localStorage.setItem(IS_BACKGROUND_AUDIO_MUTED_KEY, backgroundAudio.muted);
+        if (this.simulationState) {
+            this.startSimulation.setAttribute("disabled", true);
+            this.stopSimulation.removeAttribute("disabled");
         }
-    }, false);
+    }
+
+    initialize() {
+        let width = parseInt(this.canvas.getAttribute("width"), 10);
+        let height = parseInt(this.canvas.getAttribute("height"), 10);
+
+        let margin = parseInt(this.canvas.getAttribute("data-world-margin"), 10);
+
+        let eventsList = document.querySelector("#events-list");
+
+        this.events = new EventsList(eventsList);
+        this.board = new Board(width, height, margin, this.canvas, () => { this.connect() });
+    }
+
+    connect() {
+        let socket = new Socket("/communications");
+
+        socket.connect();
+
+        socket.join("controller", {}).receive("ok", channel => {
+            console.info("Communication channel: attached, Channel:", channel);
+
+            this.startSimulation.addEventListener("click", () => {
+                this.startSimulation.setAttribute("disabled", true);
+                this.stopSimulation.removeAttribute("disabled");
+
+                this.simulationState = true;
+
+                channel.push("start_simulation");
+            });
+
+            this.stopSimulation.addEventListener("click", () => {
+                this.stopSimulation.setAttribute("disabled", true);
+                this.startSimulation.removeAttribute("disabled");
+
+                this.simulationState = false;
+
+                channel.push("stop_simulation");
+            });
+        });
+
+        socket.join("events", {}).receive("ok", channel => {
+            console.info("Events channel: attached, Channel:", channel);
+
+            channel.on("incoming", payload => {
+                this.events.updateList(payload);
+                this.board.updateBoard(payload);
+            });
+        });
+    }
+
+    playMusic() {
+        this.backgroundAudio.muted = this.audioMuted;
+
+        this.backgroundAudio.loop = true;
+        this.backgroundAudio.play();
+
+        window.addEventListener("keydown", (event) => {
+            let key = event.keyCode || event.which;
+
+            // Mute background audio via "m" or "M" key.
+
+            if (key === 77) {
+                this.audioMuted = !this.audioMuted;
+                this.backgroundAudio.muted = this.audioMuted;
+
+                window.localStorage.setItem(IS_BACKGROUND_AUDIO_MUTED_KEY, this.audioMuted);
+            }
+        }, false);
+    }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    let app = new App();
+
+    app.playMusic();
+    app.initialize();
 });
