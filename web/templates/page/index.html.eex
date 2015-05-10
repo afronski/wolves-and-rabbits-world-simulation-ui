@@ -26,6 +26,9 @@
 
 <section class="hidden">
   <img id="grass" src="/assets/grass.png" />
+  <img id="carrot" src="/assets/carrot.png" />
+  <img id="rabbit" src="/assets/rabbit.png" />
+  <img id="wolf" src="/assets/wolf.png" />
 </section>
 
 <footer id="footer">

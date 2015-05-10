@@ -1029,8 +1029,12 @@ var Board = exports.Board = (function () {
         this.canvas = canvas;
         this.context = canvas.getContext("2d");
 
+        this.movement = {};
         this.tiles = {
-            grass: this.loadTile("grass")
+            grass: this.loadTile("grass"),
+            carrot: this.loadTile("carrot"),
+            rabbit: this.loadTile("rabbit"),
+            wolf: this.loadTile("wolf")
         };
 
         this.clearBackground();
@@ -1058,13 +1062,62 @@ var Board = exports.Board = (function () {
 
                 for (var x = startingX; x < this.worldWidth - this.margin; ++x) {
                     for (var y = startingY; y < this.worldHeight - this.margin; ++y) {
-                        this.context.drawImage(this.tiles.grass, x * TILE_SIZE, y * TILE_SIZE);
+                        this.clear(x, y);
                     }
                 }
             }
         },
+        draw: {
+            value: function draw(tile, x, y) {
+                this.context.drawImage(this.tiles[tile], x * TILE_SIZE, y * TILE_SIZE);
+            }
+        },
+        clear: {
+            value: function clear(x, y) {
+                this.context.drawImage(this.tiles.grass, x * TILE_SIZE, y * TILE_SIZE);
+            }
+        },
         updateBoard: {
-            value: function updateBoard(payload) {}
+            value: function updateBoard(payload) {
+                if (payload.x) {
+                    payload.x += this.margin;
+                }
+
+                if (payload.y) {
+                    payload.y += this.margin;
+                }
+
+                switch (payload.action) {
+                    case "planted":
+                        this.draw("carrot", payload.x, payload.y);
+                        break;
+
+                    case "eaten":
+                        this.clear(payload.x, payload.y);
+                        break;
+
+                    case "born":
+                        this.movement[payload.id] = { x: payload.x, y: payload.y };
+                        this.draw(payload.who, payload.x, payload.y);
+                        break;
+
+                    case "move":
+                        var lastPosition = this.movement[payload.id];
+
+                        if (lastPosition) {
+                            this.clear(lastPosition.x, lastPosition.y);
+                        }
+
+                        this.movement[payload.id] = { x: payload.x, y: payload.y };
+                        this.draw(payload.who, payload.x, payload.y);
+                        break;
+
+                    case "died":
+                        delete this.movement[payload.id];
+                        this.clear(payload.x, payload.y);
+                        break;
+                }
+            }
         }
     });
 
