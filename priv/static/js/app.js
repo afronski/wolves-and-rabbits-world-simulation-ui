@@ -1015,7 +1015,7 @@ Object.defineProperty(exports, "__esModule", {
 var TILE_SIZE = 10;
 
 var Board = exports.Board = (function () {
-    function Board(width, height, margin, canvas, loaded) {
+    function Board(width, height, margin, canvas, loadedCallback) {
         _classCallCheck(this, Board);
 
         this.width = width;
@@ -1030,6 +1030,7 @@ var Board = exports.Board = (function () {
         this.context = canvas.getContext("2d");
 
         this.movement = {};
+        this.placement = [];
         this.tiles = {
             grass: this.loadTile("grass"),
             carrot: this.loadTile("carrot"),
@@ -1040,7 +1041,7 @@ var Board = exports.Board = (function () {
         this.clearBackground();
         this.drawTerrain();
 
-        loaded();
+        loadedCallback();
     }
 
     _createClass(Board, {
@@ -1061,7 +1062,11 @@ var Board = exports.Board = (function () {
                 var startingY = this.margin;
 
                 for (var x = startingX; x < this.worldWidth - this.margin; ++x) {
+                    this.placement[x - this.margin] = [];
+
                     for (var y = startingY; y < this.worldHeight - this.margin; ++y) {
+                        this.placement[x - this.margin][y - this.margin] = [];
+
                         this.clear(x, y);
                     }
                 }
@@ -1077,8 +1082,72 @@ var Board = exports.Board = (function () {
                 this.context.drawImage(this.tiles.grass, x * TILE_SIZE, y * TILE_SIZE);
             }
         },
+        trackMovement: {
+            value: function trackMovement(id, x, y) {
+                this.movement[id] = { x: x, y: y };
+            }
+        },
+        untrackMovement: {
+            value: function untrackMovement(id) {
+                delete this.movement[id];
+            }
+        },
+        getLastPosition: {
+            value: function getLastPosition(id) {
+                return this.movement[id];
+            }
+        },
+        removeFromCell: {
+            value: function removeFromCell(x, y, id) {
+                var placement = this.placement[x - this.margin - 1][y - this.margin - 1];
+
+                if (!placement || placement.length === 0) {
+                    return;
+                }
+
+                var results = placement.filter(function (e) {
+                    return e.id !== id;
+                });
+                var overriding = null;
+
+                if (results.filter(function (e) {
+                    return e.who === "carrot";
+                }).length > 0) {
+                    overriding = "carrot";
+                }
+
+                if (results.filter(function (e) {
+                    return e.who === "rabbit";
+                }).length > 0) {
+                    overriding = "rabbit";
+                }
+
+                if (results.filter(function (e) {
+                    return e.who === "wolf";
+                }).length > 0) {
+                    overriding = "wolf";
+                }
+
+                if (results.length === 0) {
+                    this.clear(x, y);
+                } else {
+                    this.draw(overriding, x, y);
+                }
+
+                this.placement[x - this.margin - 1][y - this.margin - 1] = results;
+            }
+        },
+        addToCell: {
+            value: function addToCell(x, y, object) {
+                this.placement[x - this.margin - 1][y - this.margin - 1].push(object);
+                this.draw(object.who, x, y);
+            }
+        },
         updateBoard: {
             value: function updateBoard(payload) {
+                var result = null;
+                var lastPosition = null;
+
                 if (payload.x) {
                     payload.x += this.margin;
                 }
@@ -1089,32 +1158,36 @@ var Board = exports.Board = (function () {
 
                 switch (payload.action) {
                     case "planted":
-                        this.draw("carrot", payload.x, payload.y);
-                        break;
-
-                    case "eaten":
-                        this.clear(payload.x, payload.y);
+                        this.addToCell(payload.x, payload.y, { who: payload.who, id: payload.id });
                         break;
 
                     case "born":
-                        this.movement[payload.id] = { x: payload.x, y: payload.y };
-                        this.draw(payload.who, payload.x, payload.y);
+                        this.addToCell(payload.x, payload.y, { who: payload.who, id: payload.id });
+                        this.trackMovement(payload.id, payload.x, payload.y);
                         break;
 
                     case "move":
-                        var lastPosition = this.movement[payload.id];
+                        lastPosition = this.getLastPosition(payload.id);
 
                         if (lastPosition) {
-                            this.clear(lastPosition.x, lastPosition.y);
+                            this.removeFromCell(lastPosition.x, lastPosition.y, payload.id);
                         }
 
-                        this.movement[payload.id] = { x: payload.x, y: payload.y };
-                        this.draw(payload.who, payload.x, payload.y);
+                        this.addToCell(payload.x, payload.y, { who: payload.who, id: payload.id });
+                        this.trackMovement(payload.id, payload.x, payload.y);
+                        break;
+
+                    case "eaten":
+                        this.removeFromCell(payload.x, payload.y, payload.id);
                         break;
 
                     case "died":
-                        delete this.movement[payload.id];
-                        this.clear(payload.x, payload.y);
+                        this.removeFromCell(payload.x, payload.y, payload.id);
+
+                        lastPosition = this.getLastPosition(payload.id);
+                        this.removeFromCell(lastPosition.x, lastPosition.y, payload.id);
+
+                        this.untrackMovement(payload.id);
                         break;
                 }
             }

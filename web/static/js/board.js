@@ -3,7 +3,7 @@
 const TILE_SIZE = 10;
 
 export class Board {
-    constructor(width, height, margin, canvas, loaded) {
+    constructor(width, height, margin, canvas, loadedCallback) {
         this.width = width;
         this.height = height;
 
@@ -16,6 +16,7 @@ export class Board {
         this.context = canvas.getContext("2d");
 
         this.movement = {};
+        this.placement = [];
         this.tiles = {
             grass: this.loadTile("grass"),
             carrot: this.loadTile("carrot"),
@@ -26,7 +27,7 @@ export class Board {
         this.clearBackground();
         this.drawTerrain();
 
-        loaded();
+        loadedCallback();
     }
 
     loadTile(name) {
@@ -43,7 +44,11 @@ export class Board {
         let startingY = this.margin;
 
         for (let x = startingX; x < this.worldWidth - this.margin; ++x) {
+            this.placement[x - this.margin] = [];
+
             for (let y = startingY; y < this.worldHeight - this.margin; ++y) {
+                this.placement[x - this.margin][y - this.margin] = [];
+
                 this.clear(x, y);
             }
         }
@@ -57,7 +62,58 @@ export class Board {
         this.context.drawImage(this.tiles.grass, x * TILE_SIZE, y * TILE_SIZE);
     }
 
+    trackMovement(id, x, y) {
+        this.movement[id] = { x, y };
+    }
+
+    untrackMovement(id) {
+        delete this.movement[id];
+    }
+
+    getLastPosition(id) {
+        return this.movement[id];
+    }
+
+    removeFromCell(x, y, id) {
+        let placement = this.placement[x - this.margin - 1][y - this.margin - 1];
+
+        if (!placement || placement.length === 0) {
+            return;
+        }
+
+        let results = placement.filter((e) => e.id !== id);
+        let overriding = null;
+
+        if (results.filter((e) => e.who === "carrot").length > 0) {
+            overriding = "carrot";
+        }
+
+        if (results.filter((e) => e.who === "rabbit").length > 0) {
+            overriding = "rabbit";
+        }
+
+        if (results.filter((e) => e.who === "wolf").length > 0) {
+            overriding = "wolf";
+        }
+
+        if (results.length === 0) {
+            this.clear(x, y);
+        } else {
+            this.draw(overriding, x, y);
+        }
+
+        this.placement[x - this.margin - 1][y - this.margin - 1] = results;
+    }
+
+    addToCell(x, y, object) {
+        this.placement[x - this.margin - 1][y - this.margin - 1].push(object);
+        this.draw(object.who, x, y);
+    }
+
     updateBoard(payload) {
+        let result = null;
+        let lastPosition = null;
+
         if (payload.x) {
             payload.x += this.margin;
         }
@@ -68,32 +124,36 @@ export class Board {
 
         switch(payload.action) {
             case "planted":
-                this.draw("carrot", payload.x, payload.y);
-                break;
-
-            case "eaten":
-                this.clear(payload.x, payload.y);
+                this.addToCell(payload.x, payload.y, { who: payload.who, id: payload.id });
                 break;
 
             case "born":
-                this.movement[payload.id] = { x: payload.x, y: payload.y };
-                this.draw(payload.who, payload.x, payload.y);
+                this.addToCell(payload.x, payload.y, { who: payload.who, id: payload.id });
+                this.trackMovement(payload.id, payload.x, payload.y);
                 break;
 
             case "move":
-                let lastPosition = this.movement[payload.id];
+                lastPosition = this.getLastPosition(payload.id);
 
                 if (lastPosition) {
-                    this.clear(lastPosition.x, lastPosition.y);
+                    this.removeFromCell(lastPosition.x, lastPosition.y, payload.id);
                 }
 
-                this.movement[payload.id] = { x: payload.x, y: payload.y };
-                this.draw(payload.who, payload.x, payload.y);
+                this.addToCell(payload.x, payload.y, { who: payload.who, id: payload.id });
+                this.trackMovement(payload.id, payload.x, payload.y);
+                break;
+
+            case "eaten":
+                this.removeFromCell(payload.x, payload.y, payload.id);
                 break;
 
             case "died":
-                delete this.movement[payload.id];
-                this.clear(payload.x, payload.y);
+                this.removeFromCell(payload.x, payload.y, payload.id);
+
+                lastPosition = this.getLastPosition(payload.id);
+                this.removeFromCell(lastPosition.x, lastPosition.y, payload.id);
+
+                this.untrackMovement(payload.id);
                 break;
         }
     }
