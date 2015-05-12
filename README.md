@@ -35,7 +35,3 @@ All *sprites* were made by me.
 ### Music
 
 Music is created by [Eric Skiff](http://ericskiff.com/music/) and provided also on [Creative Commons Attribution](http://creativecommons.org/licenses/by/3.0/) license.
-
-## TODO
-
-- *TODO*: Tests - Channels and Controllers.
