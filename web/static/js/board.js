@@ -1,6 +1,6 @@
 "use strict";
 
-const TILE_SIZE = 10;
+const TILE_SIZE = 40;
 
 export class Board {
     constructor(width, height, margin, canvas, loadedCallback) {
@@ -55,11 +55,11 @@ export class Board {
     }
 
     draw(tile, x, y) {
-        this.context.drawImage(this.tiles[tile], x * TILE_SIZE, y * TILE_SIZE);
+        this.context.drawImage(this.tiles[tile], x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
     }
 
     clear(x, y) {
-        this.context.drawImage(this.tiles.grass, x * TILE_SIZE, y * TILE_SIZE);
+        this.context.drawImage(this.tiles.grass, x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
     }
 
     trackMovement(id, x, y) {

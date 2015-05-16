@@ -8,9 +8,9 @@
 
   <section id="board" class="board">
     <canvas id="terrain" class="playground"
-            width="<%= @world.width * 10 + @world.margin %>"
-            height="<%= @world.height * 10 + @world.margin %>"
-            data-world-margin="<%= @world.margin %>"
+            width="<%= @world.width * @world.tile_size + @world.margin * @world.tile_size %>"
+            height="<%= @world.height * @world.tile_size + @world.margin * @world.tile_size %>"
+            data-world-margin="<%= @world.margin * @world.tile_size %>"
             data-world-width="<%= @world.width %>"
             data-world-height="<%= @world.height %>"
             data-world-simulation-started="<%= @world.simulation_started %>">

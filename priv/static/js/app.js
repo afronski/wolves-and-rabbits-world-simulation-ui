@@ -1031,7 +1031,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 "use strict";
 
-var TILE_SIZE = 10;
+var TILE_SIZE = 40;
 
 var Board = exports.Board = (function () {
     function Board(width, height, margin, canvas, loadedCallback) {
@@ -1093,12 +1093,12 @@ var Board = exports.Board = (function () {
         },
         draw: {
             value: function draw(tile, x, y) {
-                this.context.drawImage(this.tiles[tile], x * TILE_SIZE, y * TILE_SIZE);
+                this.context.drawImage(this.tiles[tile], x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
             }
         },
         clear: {
             value: function clear(x, y) {
-                this.context.drawImage(this.tiles.grass, x * TILE_SIZE, y * TILE_SIZE);
+                this.context.drawImage(this.tiles.grass, x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
             }
         },
         trackMovement: {
