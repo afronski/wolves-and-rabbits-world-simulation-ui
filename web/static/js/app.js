@@ -4,7 +4,11 @@ import { Socket } from "phoenix";
 import { EventsList } from "./events-list";
 import { Board } from "./board";
 
-const IS_BACKGROUND_AUDIO_MUTED_KEY = "BackgroundAudioMuted";
+const APP_STATE_KEY = "ApplicationState";
+const DEFAULT_STATE = {
+    audio: true,
+    debug: false
+};
 
 class App {
     constructor() {
@@ -15,7 +19,7 @@ class App {
         this.startSimulation = document.querySelector("#start-simulation");
         this.stopSimulation = document.querySelector("#stop-simulation");
 
-        this.audioMuted = JSON.parse(window.localStorage.getItem(IS_BACKGROUND_AUDIO_MUTED_KEY)) || false;
+        this.state = JSON.parse(window.localStorage.getItem(APP_STATE_KEY)) || DEFAULT_STATE;
         this.simulationState = this.canvas.getAttribute("data-world-simulation-started") === "true";
 
         this.events = null;
@@ -36,7 +40,9 @@ class App {
         let eventsList = document.querySelector("#events-list");
 
         this.events = new EventsList(eventsList);
-        this.board = new Board(width, height, margin, this.canvas, () => { this.connect() });
+        this.board = new Board(width, height, margin, this.canvas, () => {
+            this.connect();
+        });
     }
 
     stop() {
@@ -91,7 +97,7 @@ class App {
     }
 
     playMusic() {
-        this.backgroundAudio.muted = this.audioMuted;
+        this.backgroundAudio.muted = !this.state.audio;
 
         this.backgroundAudio.loop = true;
         this.backgroundAudio.play();
@@ -102,10 +108,19 @@ class App {
             // Mute background audio via "m" or "M" key.
 
             if (key === 77) {
-                this.audioMuted = !this.audioMuted;
-                this.backgroundAudio.muted = this.audioMuted;
+                this.state.audio = !this.state.audio;
+                this.backgroundAudio.muted = !this.state.audio;
 
-                window.localStorage.setItem(IS_BACKGROUND_AUDIO_MUTED_KEY, this.audioMuted);
+                window.localStorage.setItem(APP_STATE_KEY, JSON.stringify(this.state));
+            }
+
+            // Mute background audio via "d" or "D" key.
+
+            if (key === 68) {
+                this.state.debug = !this.state.debug;
+                window.debug = this.state.debug;
+
+                window.localStorage.setItem(APP_STATE_KEY, JSON.stringify(this.state));
             }
         }, false);
     }
@@ -113,6 +128,8 @@ class App {
 
 document.addEventListener("DOMContentLoaded", () => {
     let app = new App();
+
+    window.debug = app.state.debug;
 
     app.playMusic();
     app.initialize();

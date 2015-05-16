@@ -866,7 +866,11 @@ var EventsList = require("./events-list").EventsList;
 
 var Board = require("./board").Board;
 
-var IS_BACKGROUND_AUDIO_MUTED_KEY = "BackgroundAudioMuted";
+var APP_STATE_KEY = "ApplicationState";
+var DEFAULT_STATE = {
+    audio: true,
+    debug: false
+};
 
 var App = (function () {
     function App() {
@@ -879,7 +883,7 @@ var App = (function () {
         this.startSimulation = document.querySelector("#start-simulation");
         this.stopSimulation = document.querySelector("#stop-simulation");
 
-        this.audioMuted = JSON.parse(window.localStorage.getItem(IS_BACKGROUND_AUDIO_MUTED_KEY)) || false;
+        this.state = JSON.parse(window.localStorage.getItem(APP_STATE_KEY)) || DEFAULT_STATE;
         this.simulationState = this.canvas.getAttribute("data-world-simulation-started") === "true";
 
         this.events = null;
@@ -969,7 +973,7 @@ var App = (function () {
             value: function playMusic() {
                 var _this = this;
 
-                this.backgroundAudio.muted = this.audioMuted;
+                this.backgroundAudio.muted = !this.state.audio;
 
                 this.backgroundAudio.loop = true;
                 this.backgroundAudio.play();
@@ -980,10 +984,19 @@ var App = (function () {
                     // Mute background audio via "m" or "M" key.
 
                     if (key === 77) {
-                        _this.audioMuted = !_this.audioMuted;
-                        _this.backgroundAudio.muted = _this.audioMuted;
+                        _this.state.audio = !_this.state.audio;
+                        _this.backgroundAudio.muted = !_this.state.audio;
 
-                        window.localStorage.setItem(IS_BACKGROUND_AUDIO_MUTED_KEY, _this.audioMuted);
+                        window.localStorage.setItem(APP_STATE_KEY, JSON.stringify(_this.state));
+                    }
+
+                    // Mute background audio via "d" or "D" key.
+
+                    if (key === 68) {
+                        _this.state.debug = !_this.state.debug;
+                        window.debug = _this.state.debug;
+
+                        window.localStorage.setItem(APP_STATE_KEY, JSON.stringify(_this.state));
                     }
                 }, false);
             }
@@ -995,6 +1008,8 @@ var App = (function () {
 
 document.addEventListener("DOMContentLoaded", function () {
     var app = new App();
+
+    window.debug = app.state.debug;
 
     app.playMusic();
     app.initialize();
