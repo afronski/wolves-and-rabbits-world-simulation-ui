@@ -92,6 +92,10 @@ class App {
             channel.on("incoming", payload => {
                 this.events.updateList(payload);
                 this.board.updateBoard(payload);
+
+                if (this.state.debug) {
+                    console.debug("Event:", payload);
+                }
             });
         });
     }

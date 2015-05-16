@@ -105,6 +105,13 @@ export class Board {
         this.placement[x - this.margin - 1][y - this.margin - 1] = results;
     }
 
+    drawGhost(payload, color) {
+        this.context.globalAlpha = 0.4;
+        this.context.fillStyle = color;
+        this.context.fillRect(payload.x * TILE_SIZE, payload.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+        this.context.globalAlpha = 1.0;
+    }
+
     addToCell(x, y, object) {
         this.placement[x - this.margin - 1][y - this.margin - 1].push(object);
         this.draw(object.who, x, y);
@@ -130,6 +137,10 @@ export class Board {
             case "born":
                 this.addToCell(payload.x, payload.y, { who: payload.who, id: payload.id });
                 this.trackMovement(payload.id, payload.x, payload.y);
+
+                if (window.debug) {
+                    this.drawGhost(payload, "#FFFFFF");
+                }
                 break;
 
             case "move":
@@ -145,6 +156,10 @@ export class Board {
 
             case "eaten":
                 this.removeFromCell(payload.x, payload.y, payload.id);
+
+                if (window.debug) {
+                    this.drawGhost(payload, "#0000FF");
+                }
                 break;
 
             case "died":
@@ -154,6 +169,10 @@ export class Board {
                 this.removeFromCell(lastPosition.x, lastPosition.y, payload.id);
 
                 this.untrackMovement(payload.id);
+
+                if (window.debug) {
+                    this.drawGhost(payload, "#FF0000");
+                }
                 break;
         }
     }
