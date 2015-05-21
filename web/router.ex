@@ -6,6 +6,7 @@ defmodule WolvesAndRabbitsWorldSimulationUi.Router do
     plug :fetch_session
     plug :fetch_flash
     plug :protect_from_forgery
+    plug Plugs.Exometer
   end
 
   scope "/", WolvesAndRabbitsWorldSimulationUi do
