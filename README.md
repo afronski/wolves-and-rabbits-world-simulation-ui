@@ -23,9 +23,9 @@ A textual description:
 3. `heroku config:add BUILDPACK_URL=https://github.com/ddollar/heroku-buildpack-multi.git`
 4. `heroku config:set HEROKU_APP_NAME=$(heroku apps:info | grep === | cut -d' ' -f2)`
 5. `heroku config:add DATADOG_API_KEY=<YOUR-API-KEY>`
-3. `git push heroku master`
-4. `heroku ps:scale web=1`
-5. `heroku open`
+6. `git push heroku master`
+7. `heroku ps:scale web=1`
+8. `heroku open`
 
 ## Assets
 

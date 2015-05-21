@@ -1,9 +1,9 @@
 use Mix.Config
 
-app_name         = :wolves_and_rabbits_world_simulation_ui
+app_name = :wolves_and_rabbits_world_simulation_ui
 polling_interval = 1_000
-histogram_stats  = ~w(min max mean 95 90)a
-memory_stats     = ~w(atom binary ets processes total)a
+histogram_stats = ~w(min max mean 95 90)a
+memory_stats = ~w(atom binary ets processes total)a
 
 config :exometer,
   predefined:
@@ -36,7 +36,7 @@ config :exometer,
       [
         hostname: 'localhost',
         port: 8125
-      ],
+      ]
     ],
 
   report: [
@@ -57,6 +57,6 @@ config :exometer,
         {
           :exometer_report_statsd,
           [:erlang, :statistics], :run_queue, polling_interval, true
-        },
+        }
       ]
   ]
