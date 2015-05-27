@@ -22,9 +22,8 @@ defmodule WolvesAndRabbitsWorldSimulationUi.Mixfile do
   defp elixirc_paths(_),     do: ["lib", "web"]
 
   defp deps do
-    [{:phoenix, "~> 0.13"},
-     {:phoenix_live_reload, "~> 0.4"},
-     {:phoenix_html, "~> 1.0"},
+    [{:phoenix, "0.12.0"},
+     {:phoenix_live_reload, "~> 0.3"},
      {:cowboy, "~> 1.0"},
      {:wolves_and_rabbits_world_simulation, github: "afronski/wolves-and-rabbits-world-simulation"},
      {:exometer, github: "PSPDFKit-labs/exometer"},
