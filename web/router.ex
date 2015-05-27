@@ -15,8 +15,8 @@ defmodule WolvesAndRabbitsWorldSimulationUi.Router do
     get "/", PageController, :index
   end
 
-   socket "/communications", WolvesAndRabbitsWorldSimulationUi.Communications do
-     channel "controller", ControllerChannel
-     channel "events", IncomingEventsChannel
-   end
+  socket "/communications", WolvesAndRabbitsWorldSimulationUi.Communications do
+    channel "controller", ControllerChannel
+    channel "events", IncomingEventsChannel
+  end
 end
