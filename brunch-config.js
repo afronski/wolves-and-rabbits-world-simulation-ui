@@ -11,14 +11,28 @@ exports.config = {
     }
   },
 
+  conventions: {
+    assets: /^(web\/static\/assets)/
+  },
+
   paths: {
-    watched: ["web/static", "test/static"],
+    watched: ["deps/phoenix/web/static", "deps/phoenix_html/web/static", "web/static", "test/static"],
     public: "priv/static"
   },
 
   plugins: {
-    ES6to5: {
-      ignore: [/^(web\/static\/vendor)/]
+    babel: {
+      ignore: [/web\/static\/vendor/]
     }
+  },
+
+  modules: {
+    autoRequire: {
+      "js/app.js": ["web/static/js/app"]
+    }
+  },
+
+  npm: {
+    enabled: true
   }
 };

@@ -1,6 +1,7 @@
 "use strict";
 
-import { Socket } from "phoenix";
+import { Socket } from "deps/phoenix/web/static/js/phoenix";
+
 import { EventsList } from "./events-list";
 import { Board } from "./board";
 
@@ -60,43 +61,47 @@ class App {
     }
 
     connect() {
-        let socket = new Socket("/communications");
+        let socket = new Socket("/communications", { params: { token: window.userToken } });
 
         socket.connect();
 
-        socket.join("controller", {}).receive("ok", channel => {
-            console.info("Communication channel: attached, Channel:", channel);
+        let controller = socket.channel("controller", {});
+
+        controller.on("stop_simulation", () => {
+            this.stop();
+        });
+
+        controller.on("start_simulation", () => {
+            this.start();
+        });
+
+        controller.join().receive("ok", response => {
+            console.info("Communication channel - attached, Response:", response);
 
             this.startSimulation.addEventListener("click", () => {
                 this.start();
-                channel.push("start_simulation");
+                controller.push("start_simulation");
             });
 
             this.stopSimulation.addEventListener("click", () => {
                 this.stop();
-                channel.push("stop_simulation");
-            });
-
-            channel.on("stop_simulation", () => {
-                this.stop();
-            });
-
-            channel.on("start_simulation", () => {
-                this.start();
+                controller.push("stop_simulation");
             });
         });
 
-        socket.join("events", {}).receive("ok", channel => {
-            console.info("Events channel: attached, Channel:", channel);
+        let events = socket.channel("events", {});
 
-            channel.on("incoming", payload => {
-                this.events.updateList(payload);
-                this.board.updateBoard(payload);
+        events.on("incoming", payload => {
+            this.events.updateList(payload);
+            this.board.updateBoard(payload);
 
-                if (this.state.debug) {
-                    console.debug("Event:", payload);
-                }
-            });
+            if (this.state.debug) {
+                console.debug("Event:", payload);
+            }
+        });
+
+        events.join().receive("ok", response => {
+            console.info("Events channel - attached, Response:", response);
         });
     }
 

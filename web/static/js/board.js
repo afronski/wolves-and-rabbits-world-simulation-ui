@@ -1,6 +1,6 @@
 "use strict";
 
-const TILE_SIZE = 40;
+const TILE_SIZE = 10;
 
 export class Board {
     constructor(width, height, margin, canvas, loadedCallback) {

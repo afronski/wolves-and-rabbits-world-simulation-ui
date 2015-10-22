@@ -10,7 +10,7 @@ defmodule WolvesAndRabbitsWorldSimulationUi.PageController do
       width: width,
       height: height,
       simulation_started: is_started,
-      tile_size: 40,
+      tile_size: 10,
       margin: 2
     }
 
