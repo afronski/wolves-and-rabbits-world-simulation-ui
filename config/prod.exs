@@ -2,7 +2,8 @@ use Mix.Config
 
 config :wolves_and_rabbits_world_simulation_ui, WolvesAndRabbitsWorldSimulationUi.Endpoint,
   http: [port: {:system, "PORT"}],
-  url: [host: "example.com"]
+  url: [host: "example.com", port: 80],
+  cache_static_manifest: "priv/static/manifest.json"
 
 config :logger, level: :info
 

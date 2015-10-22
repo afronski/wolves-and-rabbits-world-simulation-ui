@@ -28,10 +28,17 @@ defmodule WolvesAndRabbitsWorldSimulationUi.Web do
     quote do
       use Phoenix.View, root: "web/templates"
 
-      import Phoenix.Controller, only: [get_flash: 2]
-      import WolvesAndRabbitsWorldSimulationUi.Router.Helpers
+      import Phoenix.Controller, only: [get_csrf_token: 0, get_flash: 2, view_module: 1]
 
       use Phoenix.HTML
+
+      import WolvesAndRabbitsWorldSimulationUi.Router.Helpers
+    end
+  end
+
+  def router do
+    quote do
+      use Phoenix.Router
     end
   end
 

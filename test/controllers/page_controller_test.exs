@@ -4,13 +4,13 @@ defmodule WolvesAndRabbitsWorldSimulationUi.PageControllerTest do
   test "page should have main header" do
     conn = get conn(), "/"
 
-    assert conn.resp_body =~ "Wolves, Rabbits and Carrots"
+    assert html_response(conn, 200) =~ "Wolves, Rabbits and Carrots"
   end
 
   test "page should have world parameters rendered" do
     conn = get conn(), "/"
 
-    assert conn.resp_body =~ "data-world-width=\"70\""
-    assert conn.resp_body =~ "data-world-height=\"70\""
+    assert html_response(conn, 200) =~ "data-world-width=\"70\""
+    assert html_response(conn, 200) =~ "data-world-height=\"70\""
   end
 end

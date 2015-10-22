@@ -1,8 +1,6 @@
 defmodule WolvesAndRabbitsWorldSimulationUi.PageController do
   use WolvesAndRabbitsWorldSimulationUi.Web, :controller
 
-  plug :action
-
   def index(conn, _params) do
     { {:width, width},
       {:height, height},

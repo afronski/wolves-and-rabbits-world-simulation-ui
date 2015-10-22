@@ -2,7 +2,9 @@ defmodule WolvesAndRabbitsWorldSimulationUi.Communications.IncomingEventsChannel
   use Phoenix.Channel
   require Logger
 
-  def join("events", _auth, socket) do
+  intercept [ "incoming" ]
+
+  def join("events", _message, socket) do
     {:ok, socket}
   end
 

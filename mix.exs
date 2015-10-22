@@ -2,33 +2,44 @@ defmodule WolvesAndRabbitsWorldSimulationUi.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :wolves_and_rabbits_world_simulation_ui,
-     version: "0.0.1",
-     elixir: "~> 1.0",
-     elixirc_paths: elixirc_paths(Mix.env),
-     compilers: [:phoenix] ++ Mix.compilers,
-     build_embedded: Mix.env == :prod,
-     start_permanent: Mix.env == :prod,
-     deps: deps]
+    [
+      app: :wolves_and_rabbits_world_simulation_ui,
+      version: "1.0.0",
+      elixir: "~> 1.1",
+      elixirc_paths: elixirc_paths(Mix.env),
+      compilers: [:phoenix] ++ Mix.compilers,
+      build_embedded: Mix.env == :prod,
+      start_permanent: Mix.env == :prod,
+      deps: deps
+    ]
   end
 
   def application do
-    [mod: {WolvesAndRabbitsWorldSimulationUi, []},
-     applications: [:lager, :exometer, :phoenix, :cowboy, :logger,
-                    :sasl, :wolves_and_rabbits_world_simulation]]
+    [
+      mod: {WolvesAndRabbitsWorldSimulationUi, []},
+      applications: [
+        :logger,
+        :cowboy,
+        :phoenix,
+        :sasl,
+        :wolves_and_rabbits_world_simulation
+      ]
+    ]
   end
 
   defp elixirc_paths(:test), do: ["lib", "web", "test/support"]
   defp elixirc_paths(_),     do: ["lib", "web"]
 
   defp deps do
-    [{:phoenix, "0.12.0"},
-     {:phoenix_live_reload, "~> 0.3"},
-     {:cowboy, "~> 1.0"},
-     {:wolves_and_rabbits_world_simulation, github: "afronski/wolves-and-rabbits-world-simulation"},
-     {:exometer, github: "PSPDFKit-labs/exometer"},
-     {:exometer_core, github: "PSPDFKit-labs/exometer_core", override: true},
-     {:edown, github: "uwiger/edown", tag: "0.5", override: true},
+    [
+      {:phoenix, "~> 1.0.3"},
+      {:phoenix_html, "~> 2.1"},
+
+      {:cowboy, "~> 1.0"},
+
+      {:wolves_and_rabbits_world_simulation, github: "afronski/wolves-and-rabbits-world-simulation"},
+
+      {:phoenix_live_reload, "~> 1.0", only: :dev}
     ]
   end
 end

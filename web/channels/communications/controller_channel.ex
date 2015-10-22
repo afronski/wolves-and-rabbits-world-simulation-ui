@@ -1,7 +1,7 @@
 defmodule WolvesAndRabbitsWorldSimulationUi.Communications.ControllerChannel do
   use Phoenix.Channel
 
-  def join("controller", _auth, socket) do
+  def join("controller", _message, socket) do
     {:ok, socket}
   end
 
