@@ -19,6 +19,7 @@ defmodule WolvesAndRabbitsWorldSimulationUi.Mixfile do
       mod: {WolvesAndRabbitsWorldSimulationUi, []},
       applications: [
         :logger,
+        :exometer,
         :cowboy,
         :phoenix,
         :sasl,
@@ -39,7 +40,12 @@ defmodule WolvesAndRabbitsWorldSimulationUi.Mixfile do
 
       {:wolves_and_rabbits_world_simulation, github: "afronski/wolves-and-rabbits-world-simulation"},
 
-      {:phoenix_live_reload, "~> 1.0", only: :dev}
+      {:phoenix_live_reload, "~> 1.0", only: :dev},
+
+      {:exometer_core, github: "PSPDFKit-labs/exometer_core", override: true},
+      {:exometer, github: "PSPDFKit-labs/exometer"},
+
+      {:edown, github: "uwiger/edown", tag: "0.7", override: true}
     ]
   end
 end
