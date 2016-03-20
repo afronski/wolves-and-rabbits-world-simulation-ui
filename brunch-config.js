@@ -16,23 +16,24 @@ exports.config = {
   },
 
   paths: {
-    watched: ["deps/phoenix/web/static", "deps/phoenix_html/web/static", "web/static", "test/static"],
+    watched: [ "web/static", "test/static" ],
     public: "priv/static"
   },
 
   plugins: {
     babel: {
-      ignore: [/web\/static\/vendor/]
+      ignore: [ /web\/static\/vendor/ ]
     }
   },
 
   modules: {
     autoRequire: {
-      "js/app.js": ["web/static/js/app"]
+      "js/app.js": [ "web/static/js/app" ]
     }
   },
 
   npm: {
-    enabled: true
+    enabled: true,
+    whitelist: [ "phoenix", "phoenix_html" ]
   }
 };

@@ -9,32 +9,10 @@
   var aliases = {};
   var has = ({}).hasOwnProperty;
 
-  var endsWith = function(str, suffix) {
-    return str.indexOf(suffix, str.length - suffix.length) !== -1;
-  };
-
-  var _cmp = 'components/';
-  var unalias = function(alias, loaderPath) {
-    var start = 0;
-    if (loaderPath) {
-      if (loaderPath.indexOf(_cmp) === 0) {
-        start = _cmp.length;
-      }
-      if (loaderPath.indexOf('/', start) > 0) {
-        loaderPath = loaderPath.substring(start, loaderPath.indexOf('/', start));
-      }
-    }
-    var result = aliases[alias + '/index.js'] || aliases[loaderPath + '/deps/' + alias + '/index.js'];
-    if (result) {
-      return _cmp + result.substring(0, result.length - '.js'.length);
-    }
-    return alias;
-  };
-
-  var _reg = /^\.\.?(\/|$)/;
+  var expRe = /^\.\.?(\/|$)/;
   var expand = function(root, name) {
     var results = [], part;
-    var parts = (_reg.test(name) ? root + '/' + name : name).split('/');
+    var parts = (expRe.test(name) ? root + '/' + name : name).split('/');
     for (var i = 0, length = parts.length; i < length; i++) {
       part = parts[i];
       if (part === '..') {
@@ -53,7 +31,7 @@
   var localRequire = function(path) {
     return function expanded(name) {
       var absolute = expand(dirname(path), name);
-      return require(absolute, path);
+      return globals.require(absolute, path);
     };
   };
 
@@ -64,34 +42,59 @@
     return module.exports;
   };
 
+  var expandAlias = function(name) {
+    return aliases[name] ? expandAlias(aliases[name]) : name;
+  };
+
   var require = function(name, loaderPath) {
-    var path = expand(name, '.');
     if (loaderPath == null) loaderPath = '/';
-    path = unalias(name, loaderPath);
+    var path = expandAlias(name);
 
     if (has.call(cache, path)) return cache[path].exports;
     if (has.call(modules, path)) return initModule(path, modules[path]);
 
-    var dirIndex = expand(path, './index');
-    if (has.call(cache, dirIndex)) return cache[dirIndex].exports;
-    if (has.call(modules, dirIndex)) return initModule(dirIndex, modules[dirIndex]);
-
-    throw new Error('Cannot find module "' + name + '" from '+ '"' + loaderPath + '"');
+    throw new Error("Cannot find module '" + name + "' from '" + loaderPath + "'");
   };
 
   require.alias = function(from, to) {
     aliases[to] = from;
   };
 
+  require.reset = function() {
+    modules = {};
+    cache = {};
+    aliases = {};
+  };
+
+  var extRe = /\.[^.\/]+$/;
+  var indexRe = /\/index(\.[^\/]+)?$/;
+  var addExtensions = function(bundle) {
+    if (extRe.test(bundle)) {
+      var alias = bundle.replace(extRe, '');
+      if (!has.call(aliases, alias) || aliases[alias].replace(extRe, '') === alias + '/index') {
+        aliases[alias] = bundle;
+      }
+    }
+
+    if (indexRe.test(bundle)) {
+      var iAlias = bundle.replace(indexRe, '');
+      if (!has.call(aliases, iAlias)) {
+        aliases[iAlias] = bundle;
+      }
+    }
+  };
+
   require.register = require.define = function(bundle, fn) {
     if (typeof bundle === 'object') {
       for (var key in bundle) {
         if (has.call(bundle, key)) {
-          modules[key] = bundle[key];
+          require.register(key, bundle[key]);
         }
       }
     } else {
       modules[bundle] = fn;
+      delete cache[bundle];
+      addExtensions(bundle);
     }
   };
 
@@ -109,7 +112,57 @@
   require._cache = cache;
   globals.require = require;
 })();
-require.register("deps/phoenix/web/static/js/phoenix", function(exports, require, module) {
+
+(function() {
+var global = window;
+var __makeRelativeRequire = function(require, mappings, pref) {
+  var none = {};
+  var tryReq = function(name, pref) {
+    var val;
+    try {
+      val = require(pref + '/node_modules/' + name);
+      return val;
+    } catch (e) {
+      if (e.toString().indexOf('Cannot find module') === -1) {
+        throw e;
+      }
+
+      if (pref.indexOf('node_modules') !== -1) {
+        var s = pref.split('/');
+        var i = s.lastIndexOf('node_modules');
+        var newPref = s.slice(0, i).join('/');
+        return tryReq(name, newPref);
+      }
+    }
+    return none;
+  };
+  return function(name) {
+    if (name in mappings) name = mappings[name];
+    if (!name) return;
+    if (name[0] !== '.' && pref) {
+      var val = tryReq(name, pref);
+      if (val !== none) return val;
+    }
+    return require(name);
+  }
+};
+
+require.register("phoenix/priv/static/phoenix.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {}, "phoenix");
+  (function() {
+    (function(exports){
+"use strict";
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
 // Phoenix Channels JavaScript client
 //
 // ## Socket Connection
@@ -133,26 +186,27 @@ require.register("deps/phoenix/web/static/js/phoenix", function(exports, require
 // To join a channel, you must provide the topic, and channel params for
 // authorization. Here's an example chat room example where `"new_msg"`
 // events are listened for, messages are pushed to the server, and
-// the channel is joined with ok/error matches, and `after` hook:
+// the channel is joined with ok/error/timeout matches:
 //
 //     let channel = socket.channel("rooms:123", {token: roomToken})
 //     channel.on("new_msg", msg => console.log("Got message", msg) )
 //     $input.onEnter( e => {
-//       channel.push("new_msg", {body: e.target.val})
+//       channel.push("new_msg", {body: e.target.val}, 10000)
 //        .receive("ok", (msg) => console.log("created message", msg) )
 //        .receive("error", (reasons) => console.log("create failed", reasons) )
-//        .after(10000, () => console.log("Networking issue. Still waiting...") )
+//        .receive("timeout", () => console.log("Networking issue...") )
 //     })
 //     channel.join()
 //       .receive("ok", ({messages}) => console.log("catching up", messages) )
 //       .receive("error", ({reason}) => console.log("failed join", reason) )
-//       .after(10000, () => console.log("Networking issue. Still waiting...") )
+//       .receive("timeout", () => console.log("Networking issue. Still waiting...") )
 //
 //
 // ## Joining
 //
-// Joining a channel with `channel.join(topic, params)`, binds the params to
-// `channel.params`. Subsequent rejoins will send up the modified params for
+// Creating a channel with `socket.channel(topic, params)`, binds the params to
+// `channel.params`, which are sent up on `channel.join()`.
+// Subsequent rejoins will send up the modified params for
 // updating authorization params, or passing up last_message_id information.
 // Successful joins receive an "ok" status, while unsuccessful joins
 // receive "error".
@@ -163,8 +217,8 @@ require.register("deps/phoenix/web/static/js/phoenix", function(exports, require
 // From the previous example, we can see that pushing messages to the server
 // can be done with `channel.push(eventName, payload)` and we can optionally
 // receive responses from the push. Additionally, we can use
-// `after(millsec, callback)` to abort waiting for our `receive` hooks and
-// take action after some period of waiting.
+// `receive("timeout", callback)` to abort waiting for our other `receive` hooks
+//  and take action after some period of waiting. The default timeout is 5000ms.
 //
 //
 // ## Socket Hooks
@@ -197,18 +251,9 @@ require.register("deps/phoenix/web/static/js/phoenix", function(exports, require
 // `channel.leave()`
 //
 
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
 var VSN = "1.0.0";
 var SOCKET_STATES = { connecting: 0, open: 1, closing: 2, closed: 3 };
+var DEFAULT_TIMEOUT = 10000;
 var CHANNEL_STATES = {
   closed: "closed",
   errored: "errored",
@@ -227,74 +272,63 @@ var TRANSPORTS = {
   websocket: "websocket"
 };
 
-var Push = (function () {
+var Push = function () {
 
   // Initializes the Push
   //
   // channel - The Channel
   // event - The event, for example `"phx_join"`
   // payload - The payload, for example `{user_id: 123}`
+  // timeout - The push timeout in milliseconds
   //
 
-  function Push(channel, event, payload) {
+  function Push(channel, event, payload, timeout) {
     _classCallCheck(this, Push);
 
     this.channel = channel;
     this.event = event;
     this.payload = payload || {};
     this.receivedResp = null;
-    this.afterHook = null;
+    this.timeout = timeout;
+    this.timeoutTimer = null;
     this.recHooks = [];
     this.sent = false;
   }
 
   _createClass(Push, [{
-    key: "send",
-    value: function send() {
-      var _this = this;
-
-      var ref = this.channel.socket.makeRef();
-      this.refEvent = this.channel.replyEventName(ref);
+    key: "resend",
+    value: function resend(timeout) {
+      this.timeout = timeout;
+      this.cancelRefEvent();
+      this.ref = null;
+      this.refEvent = null;
       this.receivedResp = null;
       this.sent = false;
-
-      this.channel.on(this.refEvent, function (payload) {
-        _this.receivedResp = payload;
-        _this.matchReceive(payload);
-        _this.cancelRefEvent();
-        _this.cancelAfter();
-      });
-
-      this.startAfter();
+      this.send();
+    }
+  }, {
+    key: "send",
+    value: function send() {
+      if (this.hasReceived("timeout")) {
+        return;
+      }
+      this.startTimeout();
       this.sent = true;
       this.channel.socket.push({
         topic: this.channel.topic,
         event: this.event,
         payload: this.payload,
-        ref: ref
+        ref: this.ref
       });
     }
   }, {
     key: "receive",
     value: function receive(status, callback) {
-      if (this.receivedResp && this.receivedResp.status === status) {
+      if (this.hasReceived(status)) {
         callback(this.receivedResp.response);
       }
 
       this.recHooks.push({ status: status, callback: callback });
-      return this;
-    }
-  }, {
-    key: "after",
-    value: function after(ms, callback) {
-      if (this.afterHook) {
-        throw "only a single after hook can be applied to a push";
-      }
-      var timer = null;
-      if (this.sent) {
-        timer = setTimeout(callback, ms);
-      }
-      this.afterHook = { ms: ms, callback: callback, timer: timer };
       return this;
     }
 
@@ -316,39 +350,57 @@ var Push = (function () {
   }, {
     key: "cancelRefEvent",
     value: function cancelRefEvent() {
+      if (!this.refEvent) {
+        return;
+      }
       this.channel.off(this.refEvent);
     }
   }, {
-    key: "cancelAfter",
-    value: function cancelAfter() {
-      if (!this.afterHook) {
-        return;
-      }
-      clearTimeout(this.afterHook.timer);
-      this.afterHook.timer = null;
+    key: "cancelTimeout",
+    value: function cancelTimeout() {
+      clearTimeout(this.timeoutTimer);
+      this.timeoutTimer = null;
     }
   }, {
-    key: "startAfter",
-    value: function startAfter() {
-      var _this2 = this;
+    key: "startTimeout",
+    value: function startTimeout() {
+      var _this = this;
 
-      if (!this.afterHook) {
+      if (this.timeoutTimer) {
         return;
       }
-      var callback = function callback() {
-        _this2.cancelRefEvent();
-        _this2.afterHook.callback();
-      };
-      this.afterHook.timer = setTimeout(callback, this.afterHook.ms);
+      this.ref = this.channel.socket.makeRef();
+      this.refEvent = this.channel.replyEventName(this.ref);
+
+      this.channel.on(this.refEvent, function (payload) {
+        _this.cancelRefEvent();
+        _this.cancelTimeout();
+        _this.receivedResp = payload;
+        _this.matchReceive(payload);
+      });
+
+      this.timeoutTimer = setTimeout(function () {
+        _this.trigger("timeout", {});
+      }, this.timeout);
+    }
+  }, {
+    key: "hasReceived",
+    value: function hasReceived(status) {
+      return this.receivedResp && this.receivedResp.status === status;
+    }
+  }, {
+    key: "trigger",
+    value: function trigger(status, response) {
+      this.channel.trigger(this.refEvent, { status: status, response: response });
     }
   }]);
 
   return Push;
-})();
+}();
 
-var Channel = (function () {
+var Channel = exports.Channel = function () {
   function Channel(topic, params, socket) {
-    var _this3 = this;
+    var _this2 = this;
 
     _classCallCheck(this, Channel);
 
@@ -357,35 +409,49 @@ var Channel = (function () {
     this.params = params || {};
     this.socket = socket;
     this.bindings = [];
+    this.timeout = this.socket.timeout;
     this.joinedOnce = false;
-    this.joinPush = new Push(this, CHANNEL_EVENTS.join, this.params);
+    this.joinPush = new Push(this, CHANNEL_EVENTS.join, this.params, this.timeout);
     this.pushBuffer = [];
     this.rejoinTimer = new Timer(function () {
-      return _this3.rejoinUntilConnected();
+      return _this2.rejoinUntilConnected();
     }, this.socket.reconnectAfterMs);
     this.joinPush.receive("ok", function () {
-      _this3.state = CHANNEL_STATES.joined;
-      _this3.rejoinTimer.reset();
+      _this2.state = CHANNEL_STATES.joined;
+      _this2.rejoinTimer.reset();
+      _this2.pushBuffer.forEach(function (pushEvent) {
+        return pushEvent.send();
+      });
+      _this2.pushBuffer = [];
     });
     this.onClose(function () {
-      _this3.socket.log("channel", "close " + _this3.topic);
-      _this3.state = CHANNEL_STATES.closed;
-      _this3.socket.remove(_this3);
+      _this2.socket.log("channel", "close " + _this2.topic);
+      _this2.state = CHANNEL_STATES.closed;
+      _this2.socket.remove(_this2);
     });
     this.onError(function (reason) {
-      _this3.socket.log("channel", "error " + _this3.topic, reason);
-      _this3.state = CHANNEL_STATES.errored;
-      _this3.rejoinTimer.setTimeout();
+      _this2.socket.log("channel", "error " + _this2.topic, reason);
+      _this2.state = CHANNEL_STATES.errored;
+      _this2.rejoinTimer.scheduleTimeout();
+    });
+    this.joinPush.receive("timeout", function () {
+      if (_this2.state !== CHANNEL_STATES.joining) {
+        return;
+      }
+
+      _this2.socket.log("channel", "timeout " + _this2.topic, _this2.joinPush.timeout);
+      _this2.state = CHANNEL_STATES.errored;
+      _this2.rejoinTimer.scheduleTimeout();
     });
     this.on(CHANNEL_EVENTS.reply, function (payload, ref) {
-      _this3.trigger(_this3.replyEventName(ref), payload);
+      _this2.trigger(_this2.replyEventName(ref), payload);
     });
   }
 
   _createClass(Channel, [{
     key: "rejoinUntilConnected",
     value: function rejoinUntilConnected() {
-      this.rejoinTimer.setTimeout();
+      this.rejoinTimer.scheduleTimeout();
       if (this.socket.isConnected()) {
         this.rejoin();
       }
@@ -393,12 +459,14 @@ var Channel = (function () {
   }, {
     key: "join",
     value: function join() {
+      var timeout = arguments.length <= 0 || arguments[0] === undefined ? this.timeout : arguments[0];
+
       if (this.joinedOnce) {
         throw "tried to join multiple times. 'join' can only be called a single time per channel instance";
       } else {
         this.joinedOnce = true;
       }
-      this.sendJoin();
+      this.rejoin(timeout);
       return this.joinPush;
     }
   }, {
@@ -433,13 +501,16 @@ var Channel = (function () {
   }, {
     key: "push",
     value: function push(event, payload) {
+      var timeout = arguments.length <= 2 || arguments[2] === undefined ? this.timeout : arguments[2];
+
       if (!this.joinedOnce) {
         throw "tried to push '" + event + "' to '" + this.topic + "' before joining. Use channel.join() before pushing events";
       }
-      var pushEvent = new Push(this, event, payload);
+      var pushEvent = new Push(this, event, payload, timeout);
       if (this.canPush()) {
         pushEvent.send();
       } else {
+        pushEvent.startTimeout();
         this.pushBuffer.push(pushEvent);
       }
 
@@ -458,20 +529,36 @@ var Channel = (function () {
     //
     //     channel.leave().receive("ok", () => alert("left!") )
     //
+
   }, {
     key: "leave",
     value: function leave() {
-      var _this4 = this;
+      var _this3 = this;
 
-      return this.push(CHANNEL_EVENTS.leave).receive("ok", function () {
-        _this4.socket.log("channel", "leave " + _this4.topic);
-        _this4.trigger(CHANNEL_EVENTS.close, "leave");
+      var timeout = arguments.length <= 0 || arguments[0] === undefined ? this.timeout : arguments[0];
+
+      var onClose = function onClose() {
+        _this3.socket.log("channel", "leave " + _this3.topic);
+        _this3.trigger(CHANNEL_EVENTS.close, "leave");
+      };
+      var leavePush = new Push(this, CHANNEL_EVENTS.leave, {}, timeout);
+      leavePush.receive("ok", function () {
+        return onClose();
+      }).receive("timeout", function () {
+        return onClose();
       });
+      leavePush.send();
+      if (!this.canPush()) {
+        leavePush.trigger("ok", {});
+      }
+
+      return leavePush;
     }
 
     // Overridable message hook
     //
     // Receives all events for specialized message handling
+
   }, {
     key: "onMessage",
     value: function onMessage(event, payload, ref) {}
@@ -485,18 +572,15 @@ var Channel = (function () {
     }
   }, {
     key: "sendJoin",
-    value: function sendJoin() {
+    value: function sendJoin(timeout) {
       this.state = CHANNEL_STATES.joining;
-      this.joinPush.send();
+      this.joinPush.resend(timeout);
     }
   }, {
     key: "rejoin",
     value: function rejoin() {
-      this.sendJoin();
-      this.pushBuffer.forEach(function (pushEvent) {
-        return pushEvent.send();
-      });
-      this.pushBuffer = [];
+      var timeout = arguments.length <= 0 || arguments[0] === undefined ? this.timeout : arguments[0];
+      this.sendJoin(timeout);
     }
   }, {
     key: "trigger",
@@ -516,11 +600,9 @@ var Channel = (function () {
   }]);
 
   return Channel;
-})();
+}();
 
-exports.Channel = Channel;
-
-var Socket = (function () {
+var Socket = exports.Socket = function () {
 
   // Initializes the Socket
   //
@@ -530,6 +612,8 @@ var Socket = (function () {
   // opts - Optional configuration
   //   transport - The Websocket Transport, for example WebSocket or Phoenix.LongPoll.
   //               Defaults to WebSocket with automatic LongPoll fallback.
+  //   timeout - The default timeout in milliseconds to trigger push timeouts.
+  //             Defaults `DEFAULT_TIMEOUT`
   //   heartbeatIntervalMs - The millisec interval to send a heartbeat message
   //   reconnectAfterMs - The optional function that returns the millsec
   //                      reconnect interval. Defaults to stepped backoff of:
@@ -550,7 +634,7 @@ var Socket = (function () {
   //
 
   function Socket(endPoint) {
-    var _this5 = this;
+    var _this4 = this;
 
     var opts = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
@@ -560,18 +644,19 @@ var Socket = (function () {
     this.channels = [];
     this.sendBuffer = [];
     this.ref = 0;
+    this.timeout = opts.timeout || DEFAULT_TIMEOUT;
     this.transport = opts.transport || window.WebSocket || LongPoll;
     this.heartbeatIntervalMs = opts.heartbeatIntervalMs || 30000;
     this.reconnectAfterMs = opts.reconnectAfterMs || function (tries) {
-      return [1000, 5000, 10000][tries - 1] || 10000;
+      return [1000, 2000, 5000, 10000][tries - 1] || 10000;
     };
     this.logger = opts.logger || function () {}; // noop
     this.longpollerTimeout = opts.longpollerTimeout || 20000;
     this.params = opts.params || {};
     this.endPoint = endPoint + "/" + TRANSPORTS.websocket;
     this.reconnectTimer = new Timer(function () {
-      _this5.disconnect(function () {
-        return _this5.connect();
+      _this4.disconnect(function () {
+        return _this4.connect();
       });
     }, this.reconnectAfterMs);
   }
@@ -610,10 +695,11 @@ var Socket = (function () {
     }
 
     // params - The params to send when connecting, for example `{user_id: userToken}`
+
   }, {
     key: "connect",
     value: function connect(params) {
-      var _this6 = this;
+      var _this5 = this;
 
       if (params) {
         console && console.log("passing params to connect is deprecated. Instead pass :params to the Socket constructor");
@@ -626,20 +712,21 @@ var Socket = (function () {
       this.conn = new this.transport(this.endPointURL());
       this.conn.timeout = this.longpollerTimeout;
       this.conn.onopen = function () {
-        return _this6.onConnOpen();
+        return _this5.onConnOpen();
       };
       this.conn.onerror = function (error) {
-        return _this6.onConnError(error);
+        return _this5.onConnError(error);
       };
       this.conn.onmessage = function (event) {
-        return _this6.onConnMessage(event);
+        return _this5.onConnMessage(event);
       };
       this.conn.onclose = function (event) {
-        return _this6.onConnClose(event);
+        return _this5.onConnClose(event);
       };
     }
 
     // Logs the message. Override `this.logger` for specialized logging. noops by default
+
   }, {
     key: "log",
     value: function log(kind, msg, data) {
@@ -652,6 +739,7 @@ var Socket = (function () {
     //
     //    socket.onError(function(error){ alert("An error occurred") })
     //
+
   }, {
     key: "onOpen",
     value: function onOpen(callback) {
@@ -675,7 +763,7 @@ var Socket = (function () {
   }, {
     key: "onConnOpen",
     value: function onConnOpen() {
-      var _this7 = this;
+      var _this6 = this;
 
       this.log("transport", "connected to " + this.endPointURL(), this.transport.prototype);
       this.flushSendBuffer();
@@ -683,7 +771,7 @@ var Socket = (function () {
       if (!this.conn.skipHeartbeat) {
         clearInterval(this.heartbeatTimer);
         this.heartbeatTimer = setInterval(function () {
-          return _this7.sendHeartbeat();
+          return _this6.sendHeartbeat();
         }, this.heartbeatIntervalMs);
       }
       this.stateChangeCallbacks.open.forEach(function (callback) {
@@ -696,7 +784,7 @@ var Socket = (function () {
       this.log("transport", "close", event);
       this.triggerChanError();
       clearInterval(this.heartbeatTimer);
-      this.reconnectTimer.setTimeout();
+      this.reconnectTimer.scheduleTimeout();
       this.stateChangeCallbacks.close.forEach(function (callback) {
         return callback(event);
       });
@@ -748,14 +836,14 @@ var Socket = (function () {
     value: function channel(topic) {
       var chanParams = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-      var channel = new Channel(topic, chanParams, this);
-      this.channels.push(channel);
-      return channel;
+      var chan = new Channel(topic, chanParams, this);
+      this.channels.push(chan);
+      return chan;
     }
   }, {
     key: "push",
     value: function push(data) {
-      var _this8 = this;
+      var _this7 = this;
 
       var topic = data.topic;
       var event = data.event;
@@ -763,7 +851,7 @@ var Socket = (function () {
       var ref = data.ref;
 
       var callback = function callback() {
-        return _this8.conn.send(JSON.stringify(data));
+        return _this7.conn.send(JSON.stringify(data));
       };
       this.log("push", topic + " " + event + " (" + ref + ")", payload);
       if (this.isConnected()) {
@@ -774,6 +862,7 @@ var Socket = (function () {
     }
 
     // Return the next message ref, accounting for overflows
+
   }, {
     key: "makeRef",
     value: function makeRef() {
@@ -789,6 +878,9 @@ var Socket = (function () {
   }, {
     key: "sendHeartbeat",
     value: function sendHeartbeat() {
+      if (!this.isConnected()) {
+        return;
+      }
       this.push({ topic: "phoenix", event: "heartbeat", payload: {}, ref: this.makeRef() });
     }
   }, {
@@ -823,11 +915,9 @@ var Socket = (function () {
   }]);
 
   return Socket;
-})();
+}();
 
-exports.Socket = Socket;
-
-var LongPoll = (function () {
+var LongPoll = exports.LongPoll = function () {
   function LongPoll(endPoint) {
     _classCallCheck(this, LongPoll);
 
@@ -869,7 +959,7 @@ var LongPoll = (function () {
   }, {
     key: "poll",
     value: function poll() {
-      var _this9 = this;
+      var _this8 = this;
 
       if (!(this.readyState === SOCKET_STATES.open || this.readyState === SOCKET_STATES.connecting)) {
         return;
@@ -881,7 +971,7 @@ var LongPoll = (function () {
           var token = resp.token;
           var messages = resp.messages;
 
-          _this9.token = token;
+          _this8.token = token;
         } else {
           var status = 0;
         }
@@ -889,22 +979,22 @@ var LongPoll = (function () {
         switch (status) {
           case 200:
             messages.forEach(function (msg) {
-              return _this9.onmessage({ data: JSON.stringify(msg) });
+              return _this8.onmessage({ data: JSON.stringify(msg) });
             });
-            _this9.poll();
+            _this8.poll();
             break;
           case 204:
-            _this9.poll();
+            _this8.poll();
             break;
           case 410:
-            _this9.readyState = SOCKET_STATES.open;
-            _this9.onopen();
-            _this9.poll();
+            _this8.readyState = SOCKET_STATES.open;
+            _this8.onopen();
+            _this8.poll();
             break;
           case 0:
           case 500:
-            _this9.onerror();
-            _this9.closeAndRetry();
+            _this8.onerror();
+            _this8.closeAndRetry();
             break;
           default:
             throw "unhandled poll status " + status;
@@ -914,12 +1004,12 @@ var LongPoll = (function () {
   }, {
     key: "send",
     value: function send(body) {
-      var _this10 = this;
+      var _this9 = this;
 
       Ajax.request("POST", this.endpointURL(), "application/json", body, this.timeout, this.onerror.bind(this, "timeout"), function (resp) {
         if (!resp || resp.status !== 200) {
-          _this10.onerror(status);
-          _this10.closeAndRetry();
+          _this9.onerror(status);
+          _this9.closeAndRetry();
         }
       });
     }
@@ -932,11 +1022,9 @@ var LongPoll = (function () {
   }]);
 
   return LongPoll;
-})();
+}();
 
-exports.LongPoll = LongPoll;
-
-var Ajax = (function () {
+var Ajax = exports.Ajax = function () {
   function Ajax() {
     _classCallCheck(this, Ajax);
   }
@@ -956,12 +1044,12 @@ var Ajax = (function () {
   }, {
     key: "xdomainRequest",
     value: function xdomainRequest(req, method, endPoint, body, timeout, ontimeout, callback) {
-      var _this11 = this;
+      var _this10 = this;
 
       req.timeout = timeout;
       req.open(method, endPoint);
       req.onload = function () {
-        var response = _this11.parseJSON(req.responseText);
+        var response = _this10.parseJSON(req.responseText);
         callback && callback(response);
       };
       if (ontimeout) {
@@ -976,7 +1064,7 @@ var Ajax = (function () {
   }, {
     key: "xhrRequest",
     value: function xhrRequest(req, method, endPoint, accept, body, timeout, ontimeout, callback) {
-      var _this12 = this;
+      var _this11 = this;
 
       req.timeout = timeout;
       req.open(method, endPoint, true);
@@ -985,8 +1073,8 @@ var Ajax = (function () {
         callback && callback(null);
       };
       req.onreadystatechange = function () {
-        if (req.readyState === _this12.states.complete && callback) {
-          var response = _this12.parseJSON(req.responseText);
+        if (req.readyState === _this11.states.complete && callback) {
+          var response = _this11.parseJSON(req.responseText);
           callback(response);
         }
       };
@@ -1011,7 +1099,7 @@ var Ajax = (function () {
         }
         var paramKey = parentKey ? parentKey + "[" + key + "]" : key;
         var paramVal = obj[key];
-        if (typeof paramVal === "object") {
+        if ((typeof paramVal === "undefined" ? "undefined" : _typeof(paramVal)) === "object") {
           queryStr.push(this.serialize(paramVal, paramKey));
         } else {
           queryStr.push(encodeURIComponent(paramKey) + "=" + encodeURIComponent(paramVal));
@@ -1032,9 +1120,7 @@ var Ajax = (function () {
   }]);
 
   return Ajax;
-})();
-
-exports.Ajax = Ajax;
+}();
 
 Ajax.states = { complete: 4 };
 
@@ -1046,13 +1132,13 @@ Ajax.states = { complete: 4 };
 //    let reconnectTimer = new Timer(() => this.connect(), function(tries){
 //      return [1000, 5000, 10000][tries - 1] || 10000
 //    })
-//    reconnectTimer.setTimeout() // fires after 1000
-//    reconnectTimer.setTimeout() // fires after 5000
+//    reconnectTimer.scheduleTimeout() // fires after 1000
+//    reconnectTimer.scheduleTimeout() // fires after 5000
 //    reconnectTimer.reset()
-//    reconnectTimer.setTimeout() // fires after 1000
+//    reconnectTimer.scheduleTimeout() // fires after 1000
 //
 
-var Timer = (function () {
+var Timer = function () {
   function Timer(callback, timerCalc) {
     _classCallCheck(this, Timer);
 
@@ -1069,40 +1155,37 @@ var Timer = (function () {
       clearTimeout(this.timer);
     }
 
-    // Cancels any previous setTimeout and schedules callback
+    // Cancels any previous scheduleTimeout and schedules callback
+
   }, {
-    key: "setTimeout",
-    value: (function (_setTimeout) {
-      function setTimeout() {
-        return _setTimeout.apply(this, arguments);
-      }
-
-      setTimeout.toString = function () {
-        return _setTimeout.toString();
-      };
-
-      return setTimeout;
-    })(function () {
-      var _this13 = this;
+    key: "scheduleTimeout",
+    value: function scheduleTimeout() {
+      var _this12 = this;
 
       clearTimeout(this.timer);
 
       this.timer = setTimeout(function () {
-        _this13.tries = _this13.tries + 1;
-        _this13.callback();
+        _this12.tries = _this12.tries + 1;
+        _this12.callback();
       }, this.timerCalc(this.tries + 1));
-    })
+    }
   }]);
 
   return Timer;
-})();
+}();
+
+
+})(typeof(exports) === "undefined" ? window.Phoenix = window.Phoenix || {} : exports);
+  })();
 });
 
-;require.register("deps/phoenix_html/web/static/js/phoenix_html", function(exports, require, module) {
+require.register("phoenix_html/priv/static/phoenix_html.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {}, "phoenix_html");
+  (function() {
+    'use strict';
+
 // Although ^=parent is not technically correct,
 // we need to use it in order to get IE8 support.
-'use strict';
-
 var elements = document.querySelectorAll('[data-submit^=parent]');
 var len = elements.length;
 
@@ -1116,20 +1199,27 @@ for (var i = 0; i < len; ++i) {
     return false;
   }, false);
 }
-});
 
-;require.register("web/static/js/app", function(exports, require, module) {
+;
+  })();
+});
+require.alias("phoenix_html/priv/static/phoenix_html.js", "phoenix_html");
+require.alias("phoenix/priv/static/phoenix.js", "phoenix");})();
+
+require.register("web/static/js/app.js", function(exports, require, module) {
 "use strict";
 
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+require("phoenix_html");
 
-var _depsPhoenixWebStaticJsPhoenix = require("deps/phoenix/web/static/js/phoenix");
+var _phoenix = require("phoenix");
 
 var _eventsList = require("./events-list");
 
 var _board = require("./board");
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var APP_STATE_KEY = "ApplicationState";
 var DEFAULT_STATE = {
@@ -1137,7 +1227,7 @@ var DEFAULT_STATE = {
     debug: false
 };
 
-var App = (function () {
+var App = function () {
     function App() {
         _classCallCheck(this, App);
 
@@ -1198,7 +1288,7 @@ var App = (function () {
         value: function connect() {
             var _this2 = this;
 
-            var socket = new _depsPhoenixWebStaticJsPhoenix.Socket("/communications", { params: { token: window.userToken } });
+            var socket = new _phoenix.Socket("/communications", { params: { token: window.userToken } });
 
             socket.connect();
 
@@ -1276,7 +1366,7 @@ var App = (function () {
     }]);
 
     return App;
-})();
+}();
 
 document.addEventListener("DOMContentLoaded", function () {
     var app = new App();
@@ -1288,20 +1378,20 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 });
 
-require.register("web/static/js/board", function(exports, require, module) {
+require.register("web/static/js/board.js", function(exports, require, module) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var TILE_SIZE = 10;
 
-var Board = (function () {
+var Board = exports.Board = function () {
     function Board(width, height, margin, canvas, loadedCallback) {
         _classCallCheck(this, Board);
 
@@ -1501,23 +1591,21 @@ var Board = (function () {
     }]);
 
     return Board;
-})();
-
-exports.Board = Board;
+}();
 });
 
-;require.register("web/static/js/events-list", function(exports, require, module) {
+;require.register("web/static/js/events-list.js", function(exports, require, module) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var EventsList = (function () {
+var EventsList = exports.EventsList = function () {
     function EventsList(list) {
         _classCallCheck(this, EventsList);
 
@@ -1543,9 +1631,7 @@ var EventsList = (function () {
     }]);
 
     return EventsList;
-})();
-
-exports.EventsList = EventsList;
+}();
 });
 
 ;require('web/static/js/app');

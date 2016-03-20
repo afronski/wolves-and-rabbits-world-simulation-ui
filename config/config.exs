@@ -5,6 +5,7 @@ config :wolves_and_rabbits_world_simulation_ui, WolvesAndRabbitsWorldSimulationU
   root: Path.dirname(__DIR__),
   secret_key_base: "7G4qKMpUCIS8At1foKliMavYUyJchluJiyAvplqlnNL4i5wrizBKmmoRgei5qfc1",
   render_errors: [accepts: ~w(html json)],
+  http: [acceptors: 2],
   pubsub: [name: WolvesAndRabbitsWorldSimulationUi.PubSub,
            adapter: Phoenix.PubSub.PG2]
 

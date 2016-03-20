@@ -33,8 +33,8 @@ defmodule WolvesAndRabbitsWorldSimulationUi.Mixfile do
 
   defp deps do
     [
-      {:phoenix, "~> 1.0.3"},
-      {:phoenix_html, "~> 2.1"},
+      {:phoenix, "~> 1.1"},
+      {:phoenix_html, "~> 2.3"},
 
       {:cowboy, "~> 1.0"},
 

@@ -1,6 +1,7 @@
 "use strict";
 
-import { Socket } from "deps/phoenix/web/static/js/phoenix";
+import "phoenix_html";
+import { Socket } from "phoenix";
 
 import { EventsList } from "./events-list";
 import { Board } from "./board";
